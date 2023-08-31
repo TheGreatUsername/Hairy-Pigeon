@@ -1,4 +1,4 @@
-Run "python3 setup.py" to install
+cd into the directory and type "python3 setup.py" to install
 
 compile with "pigeon filename"
 
