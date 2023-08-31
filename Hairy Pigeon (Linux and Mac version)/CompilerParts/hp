@@ -1,0 +1,516 @@
+#bullshit first lines to prevent bugs
+str
+
+fn clone a = a
+
+fn equals a b = a == b
+
+fn true = 1
+fn false = 0
+
+fn pass > void = 0
+
+fn malloc n = sys_alloc n
+
+fn free p = sys_free p
+
+fn vecfmt = 0
+fn mapfmt = 1
+
+fn vec t_ = {
+    cap_ = 8
+    [
+        cap = cap_
+        len = 0
+        t = t_
+        mem = malloc cap_ * 8
+        strfmt = vecfmt
+        fn == a b = {
+            | a.len != b.len : false
+            | _ : {
+                result = true
+                for i a.len : | a[i] != b[i] : {
+                    result = false
+                    break
+                }
+                result
+            }
+        }
+        fn != a b = {not (a == b)}
+        fn % s e = {
+            t = s.t
+            t.(chr)
+            result = ""
+            skip = false
+            applied = false
+            for i s.len : {
+                c = s[i]
+                | skip : skip = false
+                | c == '{' and $ (i != $ s.len - 1) and $ (s[i + 1] == '}') and $ not applied : {
+                    skip = true
+                    applied = true
+                    vextend result tostr e
+                }
+                | _ : vpush result c
+            }
+            result
+        }
+        fn + a b = {
+            result = clone a
+            | eqtype a.t b : vpush result b
+            | eqtype a b : result = vadd a b
+            result
+        }
+        fn * v n = {
+            r = clone v
+            for i 1 n : vextend r v
+            | n == 0 : vclear r
+            r
+        }
+        fn [] v i = {
+            checkoob v i
+            weakcast v.t memindex v.mem i 8
+        }
+        fn []= v i e = {
+            vset v i e
+        }
+        fn copy v = {
+            result = weakcast v malloc sizeof v
+            result.cap = v.cap
+            result.len = v.len
+            result.t = v.t
+            result.mem = malloc result.cap * 8
+            result.strfmt = v.strfmt
+            for i v.len : memindexset result.mem i 8 copy weakcast result.t memindex v.mem i 8
+            result
+        }
+        fn drop v = {
+            for i v.len : drop weakcast v.t memindex v.mem i 8
+            free v.mem
+        }
+    ]
+}
+
+fn vpush v e = {
+    vchecktype v e
+    memindexset v.mem v.len 8 copy e
+    v.len = v.len + 1
+    | v.len == v.cap : {
+        v.cap = v.cap * 2
+        newmem = malloc v.cap * 8
+        for i v.len : memindexset newmem i 8 memindex v.mem i 8
+        free v.mem
+        v.mem = newmem
+    }
+    e
+}
+
+fn exit c = cf (exit c)
+
+fn oob l i > (void) = {
+    #print `Out of bounds length `
+    #print l
+    #print ` with index `
+    #println i
+    cf (printf `Out of bounds length %ld with index %ld` l i)
+    exit 1
+}
+
+fn checkoob v i = {
+    | i < 0 : oob v.len i
+    | i >= v.len : oob v.len i
+}
+
+fn vchecktype v e = {
+    u = v.t
+    e.(u)
+}
+
+fn vget v i = {
+    checkoob v i
+    weakcast v.t memindex v.mem i 8
+}
+
+fn vset v i e = {
+    vchecktype v e
+    checkoob v i
+    drop weakcast v.t memindex v.mem i 8
+    memindexset v.mem i 8 copy weakcast v.t e #memindex v.mem i 8
+    e
+}
+
+fn vhas v e = {
+    result = 0
+    for i v : | e == i : {
+        result = 1
+        break
+    }
+    result 
+}
+
+fn vextend a b = {
+    for e b : vpush a e
+}
+
+fn vadd a b = {
+    a = clone a
+    vextend a b
+    a
+}
+
+fn str = vec chr
+
+fn vclear v = {
+    for (v.len) : vpop v
+    v
+}
+
+fn vpop v = vremove v v.len - 1
+
+fn vreverse v = {
+    result = vec v.t
+    for i v.len : {
+        vpush result v[v.len - i - 1]
+    }
+    result
+}
+
+fn inttostr n = {
+    result = ""
+    isneg = false
+    | n < 0 : {
+        isneg = true
+        n = 0 - n
+    }
+    
+    | n == 0 : result = "0"
+    | _ : {
+        for i 1 20 : {
+            vpush result '0' + $ n % 10
+            / n 10
+            | n == 0 : break
+        }
+        | isneg : vpush result '-'
+        result = vreverse result
+    }
+    result
+}
+
+fn flttostr n = {
+    result = tostr toint n
+    vpush result '.'
+    for i 5 : {
+        * n 10
+        d = (toint n) % 10
+        c = '0' + d
+        vpush result c
+    }
+    result
+}
+
+fn structtostr e = {
+    result = "[struct]"
+    | e.strfmt == vecfmt : result = vtostr e
+    | e.strfmt == mapfmt : result = mtostr e
+    result
+}
+
+fn tostrextend s e = {
+    result = ""
+    | eqtype e str : result = e
+    | eqtype e chr : vpush result e
+    | eqtype e int : result = inttostr e
+    | eqtype e flt : result = flttostr e
+    | hasprop e strfmt : result = structtostr e
+    | hasprop e _ : result = sys_structtostr e
+    vextend s result
+    s
+}
+
+fn tostr e = tostrextend "" e
+
+fn vremove v index = {
+    checkoob v index
+    drop weakcast v.t memindex v.mem index 8
+    for i index v.len - 1 : {
+        memindexset v.mem i 8 memindex v.mem i+1 8
+    }
+    - v.len 1
+}
+
+fn vfind v e = {
+    r = -1
+    for i v.len : {
+        f = v[i]
+        | f == e : {
+            r = i
+            break
+        }
+    }
+    r
+}
+
+fn vhas v e = (vfind v e) != (-1)
+
+fn vslice v s e = {
+    r = vec v.t
+    for i s e : vpush r v[i]
+    r
+}
+
+fn vtostr v = {
+    r = "["
+    | hasprop v len : {
+        for e v : vextend r (tostr e) + ", "
+        | r != "[" : {
+            vpop r
+            vpop r
+        }
+        vpush r ']'
+    }
+    r
+}
+
+fn mtostr v = {
+    r = "["
+    for e v.keys : {
+        vextend r (tostr e) + ": " + (tostr v[e]) + ", "
+    }
+    | r != "[" : {
+        vpop r
+        vpop r
+    }
+    vpush r ']'
+    r
+}
+
+fn vfindstr v s = {
+    result = -1
+    for i v.len-s.len+1 : {
+        | (vslice v i i + s.len) == s : {
+            result = i 
+            break 
+        } 
+    } 
+    result 
+} 
+ 
+fn vhasstr v s = (vfindstr v s) != -1
+
+fn nosuchkey k = {
+    println $"Error: map has no such key '{k}'"
+    exit 1
+}
+
+fn map kt_ vt_ = {[
+    keys = vec kt_
+    values = vec vt_
+    strfmt = mapfmt
+    fn [] m k = {
+        k.((mkeys m).t)
+        | not vhas mkeys m k : nosuchkey k
+        result = vget m.values 0
+        for i m.keys.len : | (vget m.keys i) == k : result = m.values[i]
+        result
+    }
+    fn []= m i e = {
+        mset m i e
+    }
+]} 
+ 
+fn mset m k v = {
+    k.(m.keys.t)
+    v.(m.values.t)
+    found = false
+    for i m.keys.len : {
+        key = m.keys[i]
+        | key == k : {
+            found = true
+            m.values[i] = v
+            break
+        }
+    }
+    | not found : {
+        vpush m.keys k
+        vpush m.values v
+    }
+    v
+}
+
+fn mget m k = {
+    k.(m.keys.t)
+    result = vget m.values 0
+    for i m.keys.len : | (vget m.keys i) == k : result = vget m.values i
+    result
+}
+
+fn mhaskey m k = vhas m.keys k
+
+fn newline = weakcast chr 10
+
+fn oldprint e = {
+    strtype = vec chr
+    | eqtype e int : cf (printf `%ld` e)
+    | eqtype e chr : cf (printf `%c` e)
+    | eqtype e flt : cf (printdub e)
+    | eqtype e mem : cf (printf `%s` e)
+    | eqtype e strtype : for c e : cf (printf `%c` c)
+    #| _ : for c (tostr e) : cf (printf `%c` c)
+    e
+}
+
+fn print e = {
+    oldprint tostr e
+}
+
+fn println e = {
+    print e
+    print newline
+    e
+}
+
+fn argc = sys_argc
+
+fn cstrtovec s = {
+    result = ""
+    i = 0
+    for (memindex s i 1) : {
+        vpush result weakcast chr memindex s i 1
+        i = i + 1
+    }
+    result
+}
+
+fn vectocstr s = {
+    result = malloc s.len + 1
+    for i s.len : memindexset result i 1 vget s i
+    memindexset result s.len 1 0
+    result
+}
+
+fn argv = {
+    result = vec vec chr
+    for i argc : {
+        vpush result cstrtovec memindex sys_argv i 8
+    }
+    result
+}
+
+fn readfile s = {
+    cfname = vectocstr s
+    contents = cf (readfile cfname)
+    result = cstrtovec contents
+    free cfname
+    free contents
+    result
+}
+
+fn writefile s text = {
+    cfname = vectocstr s
+    ctext = vectocstr text 
+    cf (writefile cfname ctext)
+    free cfname
+    free ctext
+    text
+}
+
+fn toint a = {
+    | eqtype a flt : weakcast int cf (dubtolong a)
+    | _ : weakcast int a
+}
+
+fn toflt a = { 
+    | eqtype a flt : weakcast flt a
+    | _ : weakcast flt cf (longtodub a)
+}
+
+fn system s = {
+    cs = vectocstr s
+    result = cf (system cs)
+    free cs
+    result
+}
+
+fn getchar = weakcast chr cf (getchar)
+
+fn readline = {
+    result = ""
+    c = getchar
+    for (c != '\n') : {
+        vpush result c
+        c = getchar
+    }
+    result
+}
+
+fn readeof = {
+    result = ""
+    c = getchar
+    for (c < 255) and (c >= 0) : {
+        vpush result c
+        c = getchar
+    }
+    result
+}
+
+fn vfilter list f = {
+    result = vec list.t
+    for e list : {
+        | \> f e : vpush result e
+    }
+    result
+}
+
+fn vsplit s sp = {
+    result = vec str
+    line = ""
+    for i s.len : {
+        c = s[i] 
+        | (vslice s i i + sp.len) == sp : {
+            vpush result line
+            line = ""
+            + i sp.len - 1
+        }
+        | _ : {
+            vpush line c
+        }
+    }
+    | line.len : vpush result line
+    result
+}
+
+fn vmap l f = {
+    result = vec l.t
+    for e l : {
+        vpush result \> f e
+    }
+    result
+}
+
+fn veach l f = for e l : \> f e
+
+fn range start end = {
+    result = vec int
+    for i start end : vpush result i 
+    result
+}
+
+fn vrep val rep = {
+    result = vec val 
+    for i rep : vpush result val 
+    result
+}
+
+fn sleep n = cf (sleep n)
+
+fn mkeys m = m.keys
+fn mvalues m = m.values
+
+fn mextend a b = {
+    keys = mkeys b
+    for k keys : a[k] = b[k]
+    a
+}
+
+#bullshit to prevent asm errors
+["h" : "h"]

@@ -1,0 +1,105 @@
+#comment with hashtag
+
+#import with use
+use "import.hp"
+importedfunction
+
+#use fn to define functions
+
+fn func a b = a * b
+
+println func 2 3
+
+#format strings with $
+println $"2 * 3 = {func 2 3}"
+
+#all operators are the same precedence
+println 1 + 2 * 3
+
+#declare vectors as such 
+v = [1 2 3]
+
+#declare maps as such
+m = [1 : 23, 2 : 47, 8 : 67]
+
+#declare structs as such 
+mystruct = [a = 1, b = 2]
+
+#append to vectors with vpush 
+println v
+vpush v 4 
+println v
+
+#access map keys and values with mkeys and mvalues
+println mkeys m 
+println mvalues m 
+
+#index both with square braces
+println v[1]
+println m[2]
+
+#for loops work as expected
+for i 10 : println i       #prints 0-9
+for i 3 10 : println i     #prints 3-9
+for i 3 10 3 :  println i  #prints 3 6 9
+for e v : println e        #prints the contents of v
+for e mystruct : println e #prints every property in the struct 
+
+#for with only one argument is a while loop 
+i = 10
+for i : {
+    println i
+    - i 1 #decrement i
+}
+
+#spread syntax works like in js 
+println [8 3 ...v]
+println [
+    ...mystruct
+    c = 3
+]
+
+#all structs are anonymous so use functions to give them names
+fn newpoint x y = [
+    x = x 
+    y = y
+]
+
+#this can be made more concise
+fn newpoint x y = [use x y]
+
+#even more concise
+fn newpoint x y = [use...] #incorporate every variable in scope into the struct 
+
+println newpoint 4 1
+
+#use curly braces for multiple lines
+fn multilines = {
+    println "multiple"
+    println "lines"
+}
+multilines
+
+#use glo keyword for globals
+glo myglobal = "a global"
+fn setglobal s = glo myglobal = s
+setglobal "yo"
+println myglobal
+
+#use bar syntax for conditionals
+#they're ternaries if the bodies return the same type
+i = 7
+println | i == 5 : "hey"
+        | i == 7 : "yo"
+        | _ : "default condition"
+
+#use case for pattern matching 
+println case i : {
+    5 : "hey"
+    7 : "yo"
+    _ : "default condition"
+}
+
+#use > to specify a function return type
+fn fact n > (int) = | n : n * fact n - 1 | _ : 1
+println fact 5
