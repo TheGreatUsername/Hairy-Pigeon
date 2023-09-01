@@ -6,8 +6,10 @@ import errno
 print('Installing...')
 
 olddir = os.getcwd()
-scriptdir = __file__[:__file__.rindex('/')]
-os.chdir(scriptdir)
+try : scriptdir = __file__[:__file__.rindex('/')]
+except : scriptdir = __file__
+try : os.chdir(scriptdir)
+except : pass
 
 compilerfolder = os.path.expanduser('~/hairypigeon')
 
