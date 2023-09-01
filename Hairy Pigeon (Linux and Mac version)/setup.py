@@ -36,12 +36,14 @@ copy('.', compilerfolder, 'CompilerParts')
 os.chdir(f'{compilerfolder}/CompilerParts')
 
 def compile(compiler, input, output, args=''):
-    subprocess.Popen(f'{compiler} {input} -O3 {args} -o {output}', shell=True).wait()
+    return subprocess.Popen(f'{compiler} {input} -O3 {args} -o {output}', shell=True)
 
-compile('g++ -std=c++20', 'SEIR.cpp', 'seir')
-compile('g++ -std=c++20', 'SEIRC.cpp', 'seirc')
-compile('gcc', 'file.c', 'file.o', args='-c')
-compile('gcc', 'onlyshowerr.c', 'onlyshowerr')
+comps = []
+comps.append(compile('g++ -std=c++20', 'SEIR.cpp', 'seir'))
+comps.append(compile('g++ -std=c++20', 'SEIRC.cpp', 'seirc'))
+comps.append(compile('gcc', 'file.c', 'file.o', args='-c'))
+comps.append(compile('gcc', 'onlyshowerr.c', 'onlyshowerr'))
+for c in comps : c.wait()
 
 for f in ['.bashrc', '.zshrc'] : subprocess.Popen(f'printf "\\nalias pigeon=\'python3 {compilerfolder}/main.py \'\\n" >> ~/{f}', shell=True).wait()
 

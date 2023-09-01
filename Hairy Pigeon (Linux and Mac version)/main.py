@@ -8,6 +8,11 @@ from pathlib import Path
 
 cc = 'gcc'
 
+def touch(path):
+    try:
+        with open(path) as _ : pass
+    except : pass
+
 def copyanything(src, dst):
     if os.path.exists(dst):
         try : os.remove(dst)
@@ -101,6 +106,7 @@ else : command = f"nasm -fmacho64 rout.asm && clang -Wl,-no_pie file.o rout.o {o
 subprocess.Popen(command, shell=True).wait()
 
 cwd = os.getcwd()
+touch(cwd + '/a.out')
 shutil.copyfile(cwd + '/a.out', cwd + '/' + outname)
 
 if rename:
