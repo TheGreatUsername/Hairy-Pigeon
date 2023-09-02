@@ -7,7 +7,7 @@ import errno
 from pathlib import Path  
 
 cc = 'gcc'
-
+ 
 def touch(path):
     try:
         with open(path, 'a') as _ : pass
