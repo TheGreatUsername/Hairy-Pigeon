@@ -12,7 +12,7 @@ def touch(path):
     try:
         with open(path, 'a') as _ : pass
     except : pass
- 
+
 def copyanything(src, dst):
     if os.path.exists(dst):
         try : os.remove(dst)
@@ -128,7 +128,7 @@ if ismakeobject:
 
 files = glob.glob(f'{scriptdir}/CompileDirectory/*')
 for f in files:
-    #if False:
+    if False:
         try: os.remove(f)
         except: pass
 
