@@ -5,7 +5,10 @@
 #include <string_view>
 
 namespace {
-    
+    template<std::integral T, typename... Ts>
+    void fmt_impl(std::string& s, T t, Ts&&... ts) {
+        
+    }
 }
 
 template<typename... Args>
