@@ -4,7 +4,13 @@ import subprocess
 import struct
 
 def tokenize(src):
-    result = re.findall(r'#[^\n]*|\.\(|\{|\}| \[|\[|\]|\(|\)|\$"[^"]*"|"[^"]*"|\'[^\']+\'|`[^`]*`|\-[\d]+|[\w_]+|[^\w_\s\(\)\[\]\{\}]+|\n|\S', src+'\n')
+    result = re.findall(r'\#\#\#|#[^\n]*|\.\(|\{|\}| \[|\[|\]|\(|\)|\$"[^"]*"|"[^"]*"|\'[^\']+\'|`[^`]*`|\-[\d]+|[\w_]+|[^\w_\s\(\)\[\]\{\}]+|\n|\S', src+'\n')
+    oldresult = result
+    result = []
+    incomment = False
+    for t in oldresult:
+        if t == '###' : incomment = not incomment
+        if not incomment and t != '###' or t == '\n' : result.append(t)
     result = [t for t in result if t[0] != '#']
     return ['\n'] + result + ['\n', '\n']
     
