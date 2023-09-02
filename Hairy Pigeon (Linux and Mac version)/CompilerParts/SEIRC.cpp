@@ -528,14 +528,14 @@ void doexeclambda() {
         auto e = popout();
         args.push_back(e);
     }
-    out("(gt (*) (");
+    out("((gt (*) (");
     for (int i = 0; i < args.size(); i++) {
         out("gt");
         if (i != args.size()-1) {
             out(",");
         }
     }
-    out("))(");
+    out(")){})(", f);
     for (int i = 0; i < args.size(); i++) {
         auto a = args.at(i);
         out(a);
