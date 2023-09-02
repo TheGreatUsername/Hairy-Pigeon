@@ -61,8 +61,8 @@ glokey = 'glo'
 breakkey = 'break'
 dollarkey = '$'
 notkey = 'not'
-fpkey = '\\'
-fpexeckey = '\\>'
+fpkey = '&'
+fpexeckey = '*'
 lambdakey = 'lambda'
 haspropkey = 'hasprop'
 casekey = 'case'
@@ -1732,7 +1732,7 @@ def expandlambdas():
             name = newid('lambda')
             if rettype != None:
                 setdecfunctype(name, rettype)
-            fp = ['\\', name] + flatten(typs)
+            fp = [fpkey, name] + flatten(typs)
             func = [fnkey, name] + args + ['='] + body
             expandedlambda = ['{'] + func + [';'] + fp + ['}']
             for t in expandedlambda : newtoks.append(t)
