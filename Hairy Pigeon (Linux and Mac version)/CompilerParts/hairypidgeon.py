@@ -4,7 +4,13 @@ import subprocess
 import struct
 
 def tokenize(src):
-    result = re.findall(r'#[^\n]*|\.\(|\{|\}| \[|\[|\]|\(|\)|\$"[^"]*"|"[^"]*"|\'[^\']+\'|`[^`]*`|\-[\d]+|[\w_]+|[^\w_\s\(\)\[\]\{\}]+|\n|\S', src+'\n')
+    result = re.findall(r'\#\#\#|#[^\n]*|\.\(|\{|\}| \[|\[|\]|\(|\)|\$"[^"]*"|"[^"]*"|\'[^\']+\'|`[^`]*`|\-[\d]+|[\w_]+|[^\w_\s\(\)\[\]\{\}]+|\n|\S', src+'\n')
+    oldresult = result
+    result = []
+    incomment = False
+    for t in oldresult:
+        if t == '###' : incomment = not incomment
+        if not incomment and t != '###' or t == '\n' : result.append(t)
     result = [t for t in result if t[0] != '#']
     return ['\n'] + result + ['\n', '\n']
     
@@ -61,8 +67,8 @@ glokey = 'glo'
 breakkey = 'break'
 dollarkey = '$'
 notkey = 'not'
-fpkey = '\\'
-fpexeckey = '\\>'
+fpkey = '&'
+fpexeckey = '*'
 lambdakey = 'lambda'
 haspropkey = 'hasprop'
 casekey = 'case'
@@ -1732,7 +1738,7 @@ def expandlambdas():
             name = newid('lambda')
             if rettype != None:
                 setdecfunctype(name, rettype)
-            fp = ['\\', name] + flatten(typs)
+            fp = [fpkey, name] + flatten(typs)
             func = [fnkey, name] + args + ['='] + body
             expandedlambda = ['{'] + func + [';'] + fp + ['}']
             for t in expandedlambda : newtoks.append(t)
