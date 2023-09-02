@@ -10,7 +10,7 @@ cc = 'gcc'
 
 def touch(path):
     try:
-        with open(path) as _ : pass
+        with open(path, 'a') as _ : pass
     except : pass
 
 def copyanything(src, dst):
