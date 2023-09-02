@@ -10,6 +10,7 @@
 #include <map>
 #include <sstream>
 #include <iomanip>
+#include <functional>
 
 #include "format.hpp"
 
@@ -19,18 +20,18 @@ bool ismakeobject = false;
 
 using namespace std;
 
-string output = "";
-string dataoutput = "";
-string curfunc = "top level scope";
+std::string output = "";
+std::string dataoutput = "";
+std::string curfunc = "top level scope";
 
-vector<string> tokens;
+std::vector<std::string> tokens;
  
-string getcurfuncname() {
+std::string getcurfuncname() {
     return curfunc;
 }
  
-vector<string> refindall(string rs, string str) {
-    vector<string> result;
+std::vector<std::string> refindall(std::string rs, std::string str) {
+    std::vector<std::string> result;
     regex exp(rs);
     smatch res;
     while (regex_search(str, res, exp)) {
@@ -41,12 +42,12 @@ vector<string> refindall(string rs, string str) {
 }
  
 template <typename T>
-int vecindex(vector<T>& Names, T old_name_) {
+int vecindex(std::vector<T>& Names, T old_name_) {
     return find(Names.begin(), Names.end(), old_name_) - Names.begin();
 }
  
 template <typename T>
-bool veccontains(vector<T> &v, T x) {
+bool veccontains(std::vector<T> &v, T x) {
     return std::find(v.begin(), v.end(), x) != v.end();
 }
  
@@ -57,8 +58,8 @@ bool mapcontainskey(std::map<T, U>& m, T e) {
 }
  
 template <typename T, typename U>
-vector<T> getkeys(map<T, U>& m) {
-    vector<T> v;
+std::vector<T> getkeys(map<T, U>& m) {
+    std::vector<T> v;
     for(auto it = m.begin(); it != m.end(); ++it) {
       v.push_back(it->first);
     }
@@ -66,8 +67,8 @@ vector<T> getkeys(map<T, U>& m) {
 }
 
 template <typename T>
-vector<T> reversevec(vector<T>& v) {
-    vector<T> result;
+std::vector<T> reversevec(std::vector<T>& v) {
+    std::vector<T> result;
     for (int i = v.size() - 1; i >= 0; i--) {
         result.push_back(v.at(i));
     }
@@ -80,20 +81,19 @@ bool isupper(const std::string& s) {
  
 bool isnumber(const std::string& s) {
     if (s.size() == 0) return false;
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && std::isdigit(*it)) ++it;
+    auto it = std::find_if(s.begin(), s.end(), std::not_fn(&::isdigit));
     return !s.empty() && it == s.end();
 }
  
-bool isint(string s) {
+bool isint(std::string s) {
     return isnumber(s) || (s.size() >= 3 && s.at(0) == '\'');
 }
 
-bool isFloat( string myString ) {
-    std::istringstream iss(myString);
+bool isFloat( std::string mystring ) {
+    std::stringstream iss(mystring);
     float f;
     iss >> noskipws >> f; // noskipws considers leading whitespace invalid
-    // Check the entire string was consumed and if either failbit or badbit is set
+    // Check the entire std::string was consumed and if either failbit or badbit is set
     return iss.eof() && !iss.fail(); 
 }
 
@@ -106,21 +106,21 @@ std::string hexStr(unsigned char* data, int len)
     return ss.str();
 }
  
-bool isalnum(string& s) {
+bool isalnum(std::string& s) {
     if (isnumber(s)) return false;
     for (auto c : s) if (!isalnum(c)) return false;
     return true;
 }
 
 template<typename... Args>
-void err(string s, Args... args);
-void err(string s);
+void err(std::string s, Args... args);
+void err(std::string s);
  
-int chartoint(string& s) {
+int chartoint(std::string& s) {
     return (int)s.at(1);
 }
  
-int toint(string s) {
+int toint(std::string s) {
     if (isnumber(s)) return stoi(s);
     if (s.size() >= 3 && s.at(0) == '\'') return chartoint(s);
     err("cannot convert '{}' to int", s);
@@ -128,18 +128,18 @@ int toint(string s) {
 }
  
 //do not make this a reference
-string makealnum(string s) {
+std::string makealnum(std::string s) {
     auto my_predicate = [](char c) -> bool {return !isalnum(c);};
     s.erase(std::remove_if(s.begin(), s.end(), my_predicate), s.end());
     return s;
 }
 
-string charhash(char c) {
+std::string charhash(char c) {
     return format("_chr_{}_", (int)c);
 }
 
-string cifylabel(string s) {
-    string result = "";
+std::string cifylabel(std::string s) {
+    std::string result = "";
     for (auto c : s) {
         if (!isalnum(c)) {
             result += charhash(c);
@@ -151,55 +151,55 @@ string cifylabel(string s) {
 }
  
 int labeli = 0;
-string uniqueid(string& s) {
+std::string uniqueid(std::string& s) {
     return cifylabel(format("@{}_{}", makealnum(s), labeli++));
 }
 
-string newname(string s) {return uniqueid(s);}
+std::string newname(std::string s) {return uniqueid(s);}
  
 int ln;
 void resetln() {
     ln = 0;
 }
  
-bool isonlychar(string& s, char c) {
+bool isonlychar(std::string& s, char c) {
     for (char d : s) {
         if (d != c) return false;
     }
     return true;
 }
 
-string readfile(string name) {
+std::string readfile(std::string name) {
     std::ifstream t(name);
     std::string str((std::istreambuf_iterator<char>(t)),
                  std::istreambuf_iterator<char>());
     return str;
 }
 
-void writefile (string name, string& text) {
+void writefile (std::string name, std::string& text) {
     ofstream myfile;
     myfile.open(name);
     myfile << text;
     myfile.close();
 }
 
-void out(string s) {
+void out(std::string s) {
     output += s;
     output += '\n';
 }
 
 template<typename... Args>
-void out(string s, Args... args) {
+void out(std::string s, Args... args) {
     out(format(s, args...));
 }
 
-void dataout(string s) {
+void dataout(std::string s) {
     dataoutput += s;
     dataoutput += '\n';
 }
 
 template<typename... Args>
-void dataout(string s, Args... args) {
+void dataout(std::string s, Args... args) {
     dataout(format(s, args...));
 } 
  
@@ -207,17 +207,17 @@ void outrp() {
     out(")");
 } 
  
-void outlabel(string s) {
+void outlabel(std::string s) {
     output += s + ":\n";
 } 
  
-vector<string> outstk;
+std::vector<std::string> outstk;
 void pushout() {
     outstk.push_back(output);
     output = "";
 } 
  
-string popout() {
+std::string popout() {
     auto result = output;
     try {
         output = outstk.at(outstk.size() - 1);
@@ -230,27 +230,27 @@ string popout() {
  
 bool docomments = false;
 template<typename... Args>
-void outcom(string s, Args... args) {
+void outcom(std::string s, Args... args) {
     if(docomments) out(format(";" + s, args...));
 } 
  
-string getcurfuncname();
+std::string getcurfuncname();
  
-void err(string s) {
+void err(std::string s) {
     cerr << "Error at line " << ln << " in " << getcurfuncname() << ": " << s << endl;
     //printtokens();
     exit(EXIT_FAILURE);
 }
 
 template<typename... Args>
-void err(string s, Args... args) {
+void err(std::string s, Args... args) {
     err(format(s, args...));
 }
 
-string toptok();
-string rawtoptok();
+std::string toptok();
+std::string rawtoptok();
 
-string gettok() {
+std::string gettok() {
     try {
         auto t = rawtoptok();
         tokens.pop_back();
@@ -266,8 +266,8 @@ string gettok() {
     return "";
 }
 
-string tokat(int i) {
-    string s = "";
+std::string tokat(int i) {
+    std::string s = "";
     try {
         s = tokens.at(tokens.size() - i - 1);
     } catch (...) {
@@ -276,11 +276,11 @@ string tokat(int i) {
     return s;
 }
 
-string rawtoptok() {
+std::string rawtoptok() {
     return tokat(0);
 }
 
-string toptok() {
+std::string toptok() {
     auto r = rawtoptok();
     auto s = gettok();
     if (r.at(0) == '\n') ln--;
@@ -288,11 +288,11 @@ string toptok() {
     return s;
 }
 
-void expect(string e, string f) {
+void expect(std::string e, std::string f) {
     err(format("expected '{}' found '{}'", e, f));
 }
 
-void match(string s) {
+void match(std::string s) {
     auto t = gettok();
     if (s != t) expect(s, t);
 }
@@ -311,24 +311,24 @@ void skipnl() {
     while(toptok().at(0) == '\n' && toptok() != "\n") gettok();
 }
 
-string getint() {
+std::string getint() {
     auto t = gettok();
     if (!isint(t))
         expect("int", t);
     return t;
 }
 
-string getalnum() {
+std::string getalnum() {
     auto t = gettok();
     if (!isalnum(t))
         expect("identifier", t);
     return t;
 }
 
-vector<string> tokenize(string s) {
+std::vector<std::string> tokenize(std::string s) {
     auto regex = R"(;[^\n]*|\(|\)|\"[^\"]*\"|[^\s\(\)]+)";
     auto toks = refindall(regex, s);
-    vector<string> result;
+    std::vector<std::string> result;
     result.push_back("\n");
     for (auto s : reversevec(toks)) {
         if (s.at(0) != ';') {
@@ -339,14 +339,14 @@ vector<string> tokenize(string s) {
     return result;
 }
 
-vector<string> stk;
+std::vector<std::string> stk;
 
-void push(string s) {
+void push(std::string s) {
     stk.push_back(s);
     out("push qword {}", s);
 }
 
-void pop(string s) {
+void pop(std::string s) {
     if (stk.size() == 0)
         err("attempt to pop from empty stack");
     stk.pop_back();
@@ -360,38 +360,38 @@ void popnone() {
     out("add rsp, 8");
 }
 
-void resetstk(vector<string>& oldstk) {
+void resetstk(std::vector<std::string>& oldstk) {
     auto n = (stk.size()) - (oldstk.size());
     if (n) out("add rsp, {}", (n * 8));
     stk = oldstk;
 }
 
-void resetstkval(vector<string>& oldstk) {
+void resetstkval(std::vector<std::string>& oldstk) {
     pop("rax");
     resetstk(oldstk);
     push("rax");
 }
 
-map<string, string> ops;
-map<string, string> cmpops;
-map<string, string> divops;
-map<string, function<int(int, int)>> opfs;
-map<string, string> fltops;
-map<string, string> sizemap;
-map<string, string> funclabels;
-map<string, vector<string>> funcs;
-map<string, string> funcbodies;
-map<string, string> globals;
-vector<string> funcargs;
-vector<string> curvars;
-//vector<string> outstk;
+map<std::string, std::string> ops;
+map<std::string, std::string> cmpops;
+map<std::string, std::string> divops;
+map<std::string, function<int(int, int)>> opfs;
+map<std::string, std::string> fltops;
+map<std::string, std::string> sizemap;
+map<std::string, std::string> funclabels;
+map<std::string, std::vector<std::string>> funcs;
+map<std::string, std::string> funcbodies;
+map<std::string, std::string> globals;
+std::vector<std::string> funcargs;
+std::vector<std::string> curvars;
+//std::vector<std::string> outstk;
 
 // void pushout() {
 //     outstk.push_back(output);
 //     output = "";
 // }
 
-// string popout() {
+// std::string popout() {
 //     if (outstk.size() < 1)
 //         err("attempt to pop empty out stack");
 //     auto result = outstk.at(outstk.size()-1);
@@ -451,7 +451,7 @@ void dofuncsub(bool ispublic) {
     pushout();
     auto oldfuncargs = funcargs;
     auto oldcurvars = curvars;
-    curvars = vector<string>();
+    curvars = std::vector<std::string>();
     gettok();
     auto name = gettok();
     curfunc = name;
@@ -460,9 +460,9 @@ void dofuncsub(bool ispublic) {
     out(funclabels.at(name));
     match("(");
     out("(");
-    vector<string> args;
+    std::vector<std::string> args;
     while (toptok() != ")") {
-        string arg = cifylabel(gettok());
+        std::string arg = cifylabel(gettok());
         args.push_back(arg);
         curvars.push_back(arg);
         out("gt var_{}", arg);
@@ -523,7 +523,7 @@ void doexeclambda() {
     pushout();
     expr();
     auto f = popout();
-    vector<string> args;
+    std::vector<std::string> args;
     while (toptok() != ")") {
         pushout();
         expr();
@@ -683,8 +683,8 @@ void doif() {
     out(")");
 }
 
-vector<vector<string>> whilestks;
-vector<string> whileexits;
+std::vector<std::vector<std::string>> whilestks;
+std::vector<std::string> whileexits;
 void dowhile() {
     gettok();
     out("({ while (");
@@ -863,7 +863,7 @@ void findfuncs() {
         if (s == "<>" || s == "<>>") {
             auto name = gettok();
             match("(");
-            vector<string> args;
+            std::vector<std::string> args;
             while (toptok() != ")") {
                 args.push_back(gettok());
             }
@@ -879,7 +879,7 @@ void findfuncs() {
     tokens = oldtokens;
 }
 
-void start(string src){
+void start(std::string src){
     tokens = tokenize(src);
     dataout("#include \"stdlib.h\"");
     dataout("#include \"stdint.h\"");
@@ -897,7 +897,7 @@ void start(string src){
     dataout("#undef opf");
     dataout("#undef fltopf");
     findfuncs();
-    string mainname = "main";
+    std::string mainname = "main";
     if (ismakeobject) mainname = cifylabel(newname("main"));
     out("int {}(int argc, char **argv){", mainname);
     auto name = "@argc";                                                                              
@@ -931,7 +931,7 @@ int main(int argc, char ** argv) {
     */
 
     for (int i = 0; i < argc; i++) {
-        string s = argv[i];
+        std::string s = argv[i];
         if (s == "-c") ismakeobject = true;
     }
     
@@ -970,7 +970,7 @@ int main(int argc, char ** argv) {
     sizemap["4"] = "int32_t";
     sizemap["8"] = "int64_t";
     
-    string src = "";
+    std::string src = "";
     for (std::string line; std::getline(std::cin, line);) {
         src += line + "\n";
     }

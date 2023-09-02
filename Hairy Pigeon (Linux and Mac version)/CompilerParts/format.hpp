@@ -2,30 +2,34 @@
 
 #include <string>
 #include <concepts>
-#include <string_view>
+#include <ranges>
+#include <cstdlib>
 
 namespace {
-    template<std::integral T, typename... Ts>
-    void fmt_impl(std::string& s, T t, Ts&&... ts) {
-        
+    constexpr std::string_view BRACES = "{}";
+
+    template<typename T, typename... Ts>
+    void fmt(std::ostream& os, std::string_view pattern, T&& t, Ts&&... ts) {
+        if (auto found = pattern.find(BRACES); found != std::string::npos) {
+            os << pattern.substr(0, found);
+            os << t;
+
+            if constexpr (sizeof...(ts) > 0) {
+                fmt(os, pattern.substr(found + BRACES.size()), std::forward<Ts>(ts)...);
+            }   
+        } else {
+            throw std::runtime_error{"Number of format args does not match number of placeholders"};
+        }
     }
 }
 
 template<typename... Args>
-std::string format(std::string pattern, Args&&... args) {
+std::string format(std::string_view pattern, Args&&... args) {
     if constexpr (sizeof...(args) == 0) {
-        return  pattern;
+        return { pattern.data(), pattern.size() };
     } else {
-                
+        std::stringstream ss;
+        fmt(ss, pattern, std::forward<Args>(args)...);
+        return ss.str();
     }
 }
-
-// template<typename T, typename... Args>
-// std::string format(std::string_view s, T value, Args... args) {
-//     if (s.find("{}") != std::std::string::npos) {
-//         auto foundat = s.find("{}");
-//         return s.substr(0, foundat + 2) % value + format(s.substr(foundat + 2, s.size() - (foundat + 2)), args...);
-//     }
-//     return s;
-// }
-
