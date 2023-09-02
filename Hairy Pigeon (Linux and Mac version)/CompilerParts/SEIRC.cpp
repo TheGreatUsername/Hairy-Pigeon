@@ -11,11 +11,13 @@
 #include <sstream>
 #include <iomanip>
 
-#include "format.cpp"
+#include "format.hpp"
 
 bool islinux = false;
 
 bool ismakeobject = false;
+
+using namespace std;
 
 string output = "";
 string dataoutput = "";
