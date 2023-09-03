@@ -48,7 +48,7 @@ fn testwith program output tmpfile command = {
     assert program.len "empty program to test"
     shfname = "tmp98y3rg.sh"
     writefile tmpfile program
-    writefile shfname $"#!/bin/bash -i\n{command} > {tmpfile}"
+    writefile shfname $"source ~/.zshrc\n{command} > {tmpfile}"
     system $"chmod 755 ./{shfname}"
     system $"chmod 755 ./{tmpfile}"
     system $"./{shfname}"
@@ -58,6 +58,4 @@ fn testwith program output tmpfile command = {
     result
 }
 
-#test "test.test"
-
-for i 100000 : writefile "tmp.hp" "hi" * 1000
+test "test.test"

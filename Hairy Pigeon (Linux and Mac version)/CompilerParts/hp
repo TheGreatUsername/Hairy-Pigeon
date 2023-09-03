@@ -515,17 +515,21 @@ fn mextend a b = {
 
 fn vjoin v s = {
     result = ""
-    for i v.len - 1 : {
-        vextend result tostr v[i] + s
+    | v.len : {
+        for i v.len - 1 : {
+            vextend result tostr v[i] + s
+        }
+        vextend result v[v.len - 1]
     }
-    vextend result v[v.len - 1]
     result
 }
 
 fn vtrim ^s = {
-    whitespace = [' ' '\t' '\n']
-    for (vhas whitespace s[0]) : vremove s 0
-    for (vhas whitespace s[s.len - 1]) : vremove s s.len - 1
+    | s.len : {
+        whitespace = [' ' '\t' '\n']
+        for (s.len and vhas whitespace s[0]) : vremove s 0
+        for (s.len and vhas whitespace s[s.len - 1]) : vremove s s.len - 1
+    }
     s
 }
 
