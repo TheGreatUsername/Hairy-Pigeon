@@ -23,7 +23,7 @@ char * readfile(char * fname) {
 void writefile(char * fname, char * s) {
     FILE * f = fopen(fname, "w");
     fwrite(s, 1, strlen(s), f);
-    fclose(f);
+    fclose(f); //this is erroring
 }
 
 long dubtolong(long n) {
