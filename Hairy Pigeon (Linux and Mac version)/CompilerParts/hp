@@ -540,5 +540,8 @@ fn assert c s = {
     }
 }
 
+fn ismac = cf (ismac)
+fn islinux = cf (islinux)
+
 #bullshit to prevent asm errors
 ["h" : "h"]

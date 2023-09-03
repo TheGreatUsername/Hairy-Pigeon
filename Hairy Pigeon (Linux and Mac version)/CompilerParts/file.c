@@ -5,6 +5,14 @@
 
 #include "alloc.c"
 
+#ifdef __APPLE__
+    int ismac() {return 1;}
+    int islinux() {return 0;}
+#elif __linux
+    int ismac() {return 0;}
+    int islinux() {return 1;}
+#endif
+
 char * readfileold(char * fname) {
     FILE * f = fopen(fname, "r");
     if (f == NULL) {
@@ -27,7 +35,7 @@ char * readfile(char * fname) {
     fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
 
     char *string = malloc(fsize + 1);
-    fread(string, fsize, 1, f);
+    int read = fread(string, fsize, 1, f);
     fclose(f);
 
     string[fsize] = 0;

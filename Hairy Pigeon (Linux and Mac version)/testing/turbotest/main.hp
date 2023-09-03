@@ -48,7 +48,8 @@ fn testwith program output tmpfile command = {
     assert program.len "empty program to test"
     shfname = "tmp98y3rg.sh"
     writefile tmpfile program
-    writefile shfname $"#! /bin/bash -i\n{command} > {tmpfile}"
+    pref = | islinux : "#! /bin/bash -i" | _ : "source ~/.zshrc"
+    writefile shfname $"{pref}\n{command} > {tmpfile}"
     system $"chmod 755 ./{shfname}"
     system $"chmod 755 ./{tmpfile}"
     system $"./{shfname}"
