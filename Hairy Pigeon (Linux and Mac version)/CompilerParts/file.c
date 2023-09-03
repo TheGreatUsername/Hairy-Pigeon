@@ -5,7 +5,7 @@
 
 #include "alloc.c"
 
-char * readfile(char * fname) {
+char * readfileold(char * fname) {
     FILE * f = fopen(fname, "r");
     if (f == NULL) {
         printf("ERROR couldn't open '%s'\n", fname);
@@ -18,6 +18,21 @@ char * readfile(char * fname) {
     int read = fread(buffer, 1, size, f);  // read in the file
     fclose(f);
     return buffer;
+}
+
+char * readfile(char * fname) {
+    FILE *f = fopen(fname, "rb");
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+
+    char *string = malloc(fsize + 1);
+    fread(string, fsize, 1, f);
+    fclose(f);
+
+    string[fsize] = 0;
+
+    return string;
 }
 
 void writefile(char * fname, char * s) {

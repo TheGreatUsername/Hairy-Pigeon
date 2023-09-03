@@ -402,7 +402,7 @@ fn readfile s = {
     contents = cf (readfile cfname)
     result = cstrtovec contents
     free cfname
-    free contents
+    cf (free contents)
     result
 }
 
