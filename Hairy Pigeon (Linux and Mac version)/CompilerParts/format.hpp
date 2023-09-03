@@ -16,7 +16,9 @@ namespace {
 
             if constexpr (sizeof...(ts) > 0) {
                 fmt(os, pattern.substr(found + BRACES.size()), std::forward<Ts>(ts)...);
-            }   
+            } else {
+                os << pattern.substr(found + BRACES.size());
+            }
         } else {
             throw std::runtime_error{"Number of format args does not match number of placeholders"};
         }
