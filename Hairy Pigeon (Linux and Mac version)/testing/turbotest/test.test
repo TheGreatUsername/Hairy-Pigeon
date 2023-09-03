@@ -1,35 +1,66 @@
-$ tmpfile test.c
-$ command gcc test.c && ./a.out
-$ program a c program
-#include "stdio.h"
-
-int main() {
-    printf("hi\n");
-}
-
-$ output 
-hi
-
-$ program a factorial function
-#include "stdio.h"
-
-int fact(int n) {
-    if (n) return n * fact(n - 1);
-    else return 1;
-}
-
-int main() {
-    printf("The factorial of %d is %d\n", 5, fact(5));
-}
-
-$ output 
-The factorial of 5 is 120
-
 $ tmpfile tmp.hp
 $ command pigeon tmp.hp -O && ./tmp
 
 $ program Pigeon hello world
 println "Hello world!"
-
 $ output 
 Hello world!
+
+$ program the example
+use "../../example.hp"
+$ output
+I have been imported.
+6
+2 * 3 = 6
+9
+[1, 2, 3]
+[1, 2, 3, 4]
+[1, 2, 8]
+[23, 47, 67]
+2
+47
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+3
+4
+5
+6
+7
+8
+9
+3
+6
+9
+1
+2
+3
+4
+1
+2
+10
+9
+8
+7
+6
+5
+4
+3
+2
+1
+[8, 3, 1, 2, 3, 4]
+[a = 1, b = 2, c = 3]
+[x = 4, y = 1]
+multiple
+lines
+yo
+yo
+yo
+120
