@@ -1,0 +1,35 @@
+$ tmpfile test.c
+$ command gcc test.c && ./a.out
+$ program a c program
+#include "stdio.h"
+
+int main() {
+    printf("hi\n");
+}
+
+$ output 
+hi
+
+$ program a factorial function
+#include "stdio.h"
+
+int fact(int n) {
+    if (n) return n * fact(n - 1);
+    else return 1;
+}
+
+int main() {
+    printf("The factorial of %d is %d\n", 5, fact(5));
+}
+
+$ output 
+The factorial of 5 is 120
+
+$ tmpfile tmp.hp
+$ command pigeon tmp.hp -O -run
+
+$ program Pigeon hello world
+println "Hello world!"
+
+$ output 
+Hello world!
