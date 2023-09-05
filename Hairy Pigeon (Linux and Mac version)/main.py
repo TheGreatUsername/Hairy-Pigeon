@@ -128,7 +128,7 @@ if ismakeobject:
 
 files = glob.glob(f'{scriptdir}/CompileDirectory/*')
 for f in files:
-    if False:
+    #if False:
         try: os.remove(f)
         except: pass
 

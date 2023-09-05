@@ -4,7 +4,7 @@ import subprocess
 import struct
 
 def tokenize(src):
-    result = re.findall(r'\#\#\#|#[^\n]*|\.\(|\{|\}| \[|\[|\]|\(|\)|\$"[^"]*"|"[^"]*"|\'[^\']+\'|`[^`]*`|\-[\d]+|[\w_]+|[^\w_\s\(\)\[\]\{\}]+|\n|\S', src+'\n')
+    result = re.findall(r'###|#[^\n]*|\.\(|\{|\}| \[|\[|\]|\(|\)|\$"[^"]*"|"[^"]*"|\'[^\']+\'|`[^`]*`|\-[\d]+|[\w_]+|[^\w_\s\(\)\[\]\{\}]+|\n|\S', src+'\n')
     oldresult = result
     result = []
     incomment = False
@@ -843,9 +843,16 @@ def dostruct(base=None):
                     name = toptok()
                     pushout()
                     t = expr()
-                    args.append(name)
-                    types.append(t)
-                    decs.append(popout())
+                    s = popout()
+                    if name in args:
+                        ind = args.index(name)
+                        args[ind] = name
+                        types[ind] = t
+                        decs[ind] = s
+                    else:
+                        args.append(name)
+                        types.append(t)
+                        decs.append(s)
         elif toptok() == '...':
             getok()
             pushout()
