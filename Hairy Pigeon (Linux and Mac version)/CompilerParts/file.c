@@ -5,7 +5,15 @@
 
 #include "alloc.c"
 
-char * readfile(char * fname) {
+#ifdef __APPLE__
+    int ismac() {return 1;}
+    int islinux() {return 0;}
+#elif __linux
+    int ismac() {return 0;}
+    int islinux() {return 1;}
+#endif
+
+char * readfileold(char * fname) {
     FILE * f = fopen(fname, "r");
     if (f == NULL) {
         printf("ERROR couldn't open '%s'\n", fname);
@@ -20,10 +28,25 @@ char * readfile(char * fname) {
     return buffer;
 }
 
+char * readfile(char * fname) {
+    FILE *f = fopen(fname, "rb");
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+
+    char *string = malloc(fsize + 1);
+    int read = fread(string, fsize, 1, f);
+    fclose(f);
+
+    string[fsize] = 0;
+
+    return string;
+}
+
 void writefile(char * fname, char * s) {
     FILE * f = fopen(fname, "w");
     fwrite(s, 1, strlen(s), f);
-    fclose(f);
+    fclose(f); //this is erroring
 }
 
 long dubtolong(long n) {

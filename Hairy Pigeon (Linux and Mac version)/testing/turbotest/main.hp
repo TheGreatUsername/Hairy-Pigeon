@@ -1,0 +1,62 @@
+fn test fname = {
+    notpassing = vec str
+    text = readfile fname
+    lines = vsplit text "\n"
+    tmpfile = "test.txt"
+    command = ""
+    desc = ""
+    sym = (vsplit lines[0] " ")[0]
+    vpush lines sym
+    accum = ""
+    program = ""
+    output = ""
+    accumtype = ""
+    for i lines.len : {
+        line = lines[i]
+        sp = vsplit line " "
+        vextend sp [" " " "]
+        | sp[0] == sym : {
+            | accumtype == "program" : program = clone accum
+            | accumtype == "output" : {
+                output = clone accum
+                testresult = testwith program output tmpfile command 
+                | not testresult : vpush notpassing desc
+            }
+            accum = ""
+            accumtype = ""
+            case sp[1] : {
+                "tmpfile" : tmpfile = clone sp[2]
+                "command" : command = vjoin (vslice sp 2 sp.len) " "
+                "program" : {
+                    desc = (vtrim vjoin (vslice sp 2 sp.len) " ") + $" at line {i + 1}"
+                    accumtype = "program"
+                }
+                "output" : accumtype = "output"
+                _ : pass
+            }
+        }
+        | _ : vextend accum line + "\n"
+    }
+    | notpassing.len : {
+        println $"Failing tests in file {fname}:"
+        for s notpassing : println $" * {s}"
+    }
+    | _ : println $"All tests passed successfully for {fname}!"
+}
+
+fn testwith program output tmpfile command = {
+    assert program.len "empty program to test"
+    shfname = "tmp98y3rg.sh"
+    writefile tmpfile program
+    pref = | islinux : "#! /bin/bash -i" | _ : "source ~/.zshrc"
+    writefile shfname $"{pref}\n{command} > {tmpfile}"
+    system $"chmod 755 ./{shfname}"
+    system $"chmod 755 ./{tmpfile}"
+    system $"./{shfname}"
+    result = (vtrim readfile tmpfile) == vtrim output
+    system $"rm {shfname}"
+    system $"rm {tmpfile}"
+    result
+}
+
+test "test.test"
