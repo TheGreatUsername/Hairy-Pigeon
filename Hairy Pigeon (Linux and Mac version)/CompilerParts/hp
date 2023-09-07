@@ -543,5 +543,30 @@ fn assert c s = {
 fn ismac = cf (ismac)
 fn islinux = cf (islinux)
 
+fn cisupper c = (c >= 'A') and (c <= 'Z')
+fn cislower c = (c >= 'a') and (c <= 'z')
+
+fn ctoupper c = {
+    diff = 'A' - 'a'
+    | cislower c : c + diff
+    | _ : c
+}
+
+fn ctolower c = {
+    diff = 'A' - 'a'
+    | cisupper c : c - diff
+    | _ : c
+}
+
+fn vtoupper ^s = {
+    for i s.len : s[i] = ctoupper s[i]
+    s
+}
+
+fn vtolower ^s = {
+    for i s.len : s[i] = ctolower s[i] 
+    s
+}
+
 #bullshit to prevent asm errors
 ["h" : "h"]
