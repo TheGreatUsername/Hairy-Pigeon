@@ -568,5 +568,36 @@ fn vtolower ^s = {
     s
 }
 
+fn carray pointer = [
+    use...
+    esize = 8
+    fn [] a i = {
+        case a.esize : {
+            1 : memindex a.pointer i 1
+            2 : memindex a.pointer i 2
+            4 : memindex a.pointer i 4
+            8 : memindex a.pointer i 8
+            _ : {    
+                println "bad carray size"
+                exit 1
+                memindex a.pointer i 1
+            }
+        }
+    }
+    fn []= a i e = { 
+        case a.esize : {
+            1 : memindexset a.pointer i 1 e
+            2 : memindexset a.pointer i 2 e
+            4 : memindexset a.pointer i 4 e
+            8 : memindexset a.pointer i 8 e
+            _ : {     
+                println "bad carray size"
+                exit 1 
+            } 
+        }
+        e
+    } 
+]
+
 #bullshit to prevent asm errors
 ["h" : "h"]
