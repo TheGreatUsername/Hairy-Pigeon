@@ -103,3 +103,34 @@ println case i : {
 #use > to specify a function return type
 fn fact n > (int) = | n : n * fact n - 1 | _ : 1
 println fact 5
+
+#use cf to call C functions
+#use backticks to declare null terminated C strings
+cf (puts `Hi!`)
+
+#carrays can be used to index memory
+#weakcast can be used to change a type
+cstring = cf (strdup `hello`)
+carr = carray cstring
+carr.esize = 1 #C character size
+println weakcast chr carr[2]
+carr[2] = 'h'
+println weakcast chr carr[2]
+cf (free cstring)
+
+#alternatively the memindex and memindexset keywords exist 
+cstring = cf (strdup `hello`)
+println weakcast chr memindex cstring 2 1
+memindexset cstring 2 1 'h'
+println weakcast chr memindex cstring 2 1
+cf (free cstring)
+
+#use & to create a function pointer
+fp = &func int int #we want a pointer specifically for a version of func that takes two ints 
+
+#use * to dereference a function pointer
+println *fp 4 5
+
+#use the lambda keyword to create a function pointer to an anonymous function
+fp = lambda a.(int) b.(int) = a + b 
+println *fp 4 5

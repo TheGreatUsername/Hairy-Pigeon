@@ -382,6 +382,7 @@ fn cstrtovec s = {
 }
 
 fn vectocstr s = {
+    assert (s.len >= 0) "string of negative length"
     result = malloc s.len + 1
     for i s.len : memindexset result i 1 vget s i
     memindexset result s.len 1 0
@@ -401,7 +402,7 @@ fn readfile s = {
     contents = cf (readfile cfname)
     result = cstrtovec contents
     free cfname
-    free contents
+    cf (free contents)
     result
 }
 
@@ -511,6 +512,92 @@ fn mextend a b = {
     for k keys : a[k] = b[k]
     a
 }
+
+fn vjoin v s = {
+    result = ""
+    | v.len : {
+        for i v.len - 1 : {
+            vextend result tostr v[i] + s
+        }
+        vextend result v[v.len - 1]
+    }
+    result
+}
+
+fn vtrim ^s = {
+    | s.len : {
+        whitespace = [' ' '\t' '\n']
+        for (s.len and vhas whitespace s[0]) : vremove s 0
+        for (s.len and vhas whitespace s[s.len - 1]) : vremove s s.len - 1
+    }
+    s
+}
+
+fn assert c s = {
+    | not c : {
+        println $"Assertion error: {s}"
+        exit 1
+    }
+}
+
+fn ismac = cf (ismac)
+fn islinux = cf (islinux)
+
+fn cisupper c = (c >= 'A') and (c <= 'Z')
+fn cislower c = (c >= 'a') and (c <= 'z')
+
+fn ctoupper c = {
+    diff = 'A' - 'a'
+    | cislower c : c + diff
+    | _ : c
+}
+
+fn ctolower c = {
+    diff = 'A' - 'a'
+    | cisupper c : c - diff
+    | _ : c
+}
+
+fn vtoupper ^s = {
+    for i s.len : s[i] = ctoupper s[i]
+    s
+}
+
+fn vtolower ^s = {
+    for i s.len : s[i] = ctolower s[i] 
+    s
+}
+
+fn carray pointer = [
+    use...
+    esize = 8
+    fn [] a i = {
+        case a.esize : {
+            1 : memindex a.pointer i 1
+            2 : memindex a.pointer i 2
+            4 : memindex a.pointer i 4
+            8 : memindex a.pointer i 8
+            _ : {    
+                println "bad carray size"
+                exit 1
+                memindex a.pointer i 1
+            }
+        }
+    }
+    fn []= a i e = { 
+        case a.esize : {
+            1 : memindexset a.pointer i 1 e
+            2 : memindexset a.pointer i 2 e
+            4 : memindexset a.pointer i 4 e
+            8 : memindexset a.pointer i 8 e
+            _ : {     
+                println "bad carray size"
+                exit 1 
+            } 
+        }
+        e
+    } 
+]
 
 #bullshit to prevent asm errors
 ["h" : "h"]

@@ -85,8 +85,8 @@ bool isnumber(const std::string& s) {
     return !s.empty() && it == s.end();
 }
  
-bool isint(std::string s) {
-    return isnumber(s) || (s.size() >= 3 && s.at(0) == '\'');
+bool isint(string s) {
+    return isnumber(s) || (s.size() >= 3 && s.at(0) == '\'') || s[0] == '0' && s[1] == 'x';
 }
 
 bool isFloat( std::string mystring ) {

@@ -47,6 +47,14 @@ for c in comps : c.wait()
 
 for f in ['.bashrc', '.zshrc'] : subprocess.Popen(f'printf "\\nalias pigeon=\'python3 {compilerfolder}/main.py \'\\n" >> ~/{f}', shell=True).wait()
 
+os.chdir(os.path.expanduser('~'))
+
+with open('pigeon', 'w') as f:
+    f.write("""
+        #!/usr/bin/env bash
+        python3 ~/hairypigeon/main.py "$@"
+    """)
+
 os.chdir(olddir)
 
 print('Done')
