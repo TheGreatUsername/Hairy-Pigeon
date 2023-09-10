@@ -31,22 +31,29 @@ char * readfileold(char * fname) {
 char * readfile(char * fname) {
     FILE *f = fopen(fname, "rb");
     fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
+    int64_t fsize = ftell(f);
     fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
 
-    char *string = malloc(fsize + 1);
-    int read = fread(string, fsize, 1, f);
+    char *string = malloc(fsize + 1 + sizeof(fsize));
+    *(int64_t*)string = fsize;
+    int read = fread(string + sizeof(fsize), fsize, 1, f);
     fclose(f);
 
-    string[fsize] = 0;
+    // string[fsize + sizeof(fsize)] = 0;
 
     return string;
 }
 
-void writefile(char * fname, char * s) {
+void oldwritefile(char * fname, char * s) {
     FILE * f = fopen(fname, "w");
     fwrite(s, 1, strlen(s), f);
-    fclose(f); //this is erroring
+    fclose(f);
+}
+
+void writefile(char * fname, char * s) {
+    FILE * f = fopen(fname, "w");
+    fwrite(s+8, 1, *(int64_t*)s, f);
+    fclose(f);
 }
 
 long dubtolong(long n) {

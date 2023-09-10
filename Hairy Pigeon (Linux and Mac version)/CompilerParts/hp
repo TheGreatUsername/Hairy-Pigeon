@@ -397,10 +397,24 @@ fn argv = {
     result
 }
 
+fn pstrtovec s = {
+    result = ""
+    len = weakcast int memindex s 0 8
+    for i len : vpush result weakcast chr memindex s i + 8 1
+    result
+}
+
+fn vectopstr s = {
+    result = malloc s.len + 8
+    memindexset result 0 8 s.len 
+    for i s.len : memindexset result i + 8 1 s[i]
+    result
+}
+
 fn readfile s = {
     cfname = vectocstr s
     contents = cf (readfile cfname)
-    result = cstrtovec contents
+    result = pstrtovec contents
     free cfname
     cf (free contents)
     result
@@ -408,7 +422,7 @@ fn readfile s = {
 
 fn writefile s text = {
     cfname = vectocstr s
-    ctext = vectocstr text 
+    ctext = vectopstr text 
     cf (writefile cfname ctext)
     free cfname
     free ctext
