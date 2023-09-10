@@ -5,6 +5,7 @@
 #define ABS(n) ((n) < 0 ? -(n) : (n))
 #define GETSIZE(m) (((long*)m)[-1])
 #define NULLDEREF(p) ((p) ? *(p) : NULL)
+#define ALIGNBY 8
 
 char *tape = NULL; //tape[tapesize];
 long tapeind = 0;
@@ -12,11 +13,12 @@ void *freed = NULL;
 
 typedef long sizetype;
 
-void *freshalloc(long size) {
+void *freshalloc(sizetype size) {
     if (!tape) tape = malloc(tapesize);
     if (size < sizeof(void*)) size = sizeof(void*);
     void *result = tape + tapeind;
-    tapeind += size + sizeof(sizetype);
+    tapeind += size + sizeof(sizetype) + ALIGNBY;
+    tapeind -= tapeind & (ALIGNBY - 1);
     *(sizetype*)result = size;
     result += sizeof(sizetype);
     return result;
@@ -28,7 +30,7 @@ long afree(void *m) {
     return 0;
 }
 
-void *getfreed(long size) {
+void *getfreed(sizetype size) {
     void *lastp = NULL;
     for (void *p = freed; p; p = *(void**)p) {
         long sp = GETSIZE(p);
@@ -45,7 +47,7 @@ void *getfreed(long size) {
     return NULL;
 }
 
-void *aalloc(long size) {
+void *aalloc(sizetype size) {
     void *result = getfreed(size);
     if (!result) {
         return freshalloc(size);
