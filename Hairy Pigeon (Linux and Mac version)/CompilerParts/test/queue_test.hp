@@ -1,0 +1,31 @@
+use "queue.hp"
+
+q = queue int
+println q
+
+assert ((qsize q) == 0) "Expected queue size to be 0"
+
+qpushback q 1
+assert ((qsize q) == 1) "Expected queue size to be 1"
+
+#testing qpopfront
+assert ((qpopfront q) == 1) "Popped first element was not equal to 1"
+assert ((qsize q) == 0) "Expected queue size to be 0"
+
+for i 17 : qpushback q i 
+
+assert ((qsize q) == 17) "Expected queue size to be 17"
+assert (q.storage.len == 2) "Expected queue storage size to be 2"
+
+for i 14 : qpopfront q 
+println q
+
+assert ((qpopfront q) == 14) "Expected qpopfront to return 14"
+assert ((qsize q) == 2) "Expected queue size to be 2"
+assert (q.storage.len == 1) "Expected storage length to be 1"
+
+assert ((qpopback q) == 16) "Expected qpopback to return 16"
+println q
+
+assert ((qpopfront q) == 15) "Expected qpopfront to return 15"
+println q

@@ -1,0 +1,86 @@
+use "buffer.hp"
+
+# make a queue holding type t
+fn queue t = {
+    _bufferSize = 16
+
+    [
+        type = t
+        bufferSize = _bufferSize
+        front = 0
+        back = 0
+        storage = [buffer t _bufferSize]
+    ]
+}
+
+#get the queue size
+fn qsize q = {
+    size = q.storage.len * q.bufferSize 
+    - size q.front 
+    - size (q.bufferSize - q.back)
+    size
+}
+
+# copy element to back of the queue
+fn qpushback q e = {    
+    q.storage[q.storage.len - 1][q.back] = e
+    + q.back 1
+
+    #if back is buffer size, we need to expand the queue
+    | q.back >= q.bufferSize : {
+        vpush q.storage buffer q.type q.bufferSize
+        q.back = 0
+    }
+
+    e
+}
+
+# copy element to front of queue
+fn qpushfront q e = {
+    - q.front 1
+
+    | q.front < 0 : {
+        vpush q.storage buffer q.type q.bufferSize
+        q.front = (q.bufferSize - 1)
+    }
+
+    q.storage[0][q.front] = e
+
+    e 
+}
+
+# remove an element from the front of the queue
+fn qpopfront q = {
+    assert ((qsize q) > 0) "Called qpopfront on an empty queue"
+
+    result = copy q.storage[0][q.front]
+    drop q.storage[0][q.front]
+    + q.front 1
+
+    #can't have front be bufferSize or more 
+    | q.front >= q.bufferSize : {
+        q.front = 0
+
+        #only pop off buffer if size is not 0, we do need some storage
+        | q.storage.len != 0 : { vremove q.storage 0 }
+    }
+
+    result   
+}
+
+# remove an element from the back of the queue
+fn qpopback q = {
+    assert ((qsize q) > 0) "Called qpopback on an empty queue"
+
+    - q.back 1
+
+    | q.back < 0 : {
+        vpop q.storage
+        q.back = q.bufferSize - 1 
+    }
+
+    result = q.storage[q.storage.len - 1][q.back]
+    drop q.storage[q.storage.len - 1][q.back]    
+
+    result 
+}

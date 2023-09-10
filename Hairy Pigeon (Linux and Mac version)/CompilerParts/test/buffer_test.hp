@@ -1,0 +1,17 @@
+use "buffer.hp"
+
+b = buffer int 6
+println b 
+
+b[0] = 7
+println b[0]
+println b
+
+initbuffelements b 0
+println b
+
+a = [buffer int 3]
+println a
+
+println sizeof a 
+println sizeof a.t

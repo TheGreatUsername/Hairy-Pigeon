@@ -1,0 +1,54 @@
+# a buffer struct 
+# @param type  the type the buffer holds
+# @param size  the number of objects the buffer can hold 
+fn buffer type size = [
+    type = type
+
+    #why can't I use typeSize for anything?
+    typeSize = sizeof type
+    len = size
+    mem = malloc ((sizeof type) * size)
+
+    #this is a terrible way to do formatting
+    strfmt = vecfmt
+
+    #access operator
+    fn [] b i = {
+        checkoob b i
+        weakcast b.type memindex b.mem i (sizeof b.type)
+    }
+
+    #access assign operator 
+    fn []= b i t = {
+        t.(b.type)
+        checkoob b i 
+
+        #kill whatever's in the buffer at index i before reassigning it
+        drop weakcast b.type memindex b.mem i (sizeof b.type)
+        memindexset b.mem i (sizeof b.type) copy weakcast b.type t 
+
+        t
+    }
+
+    #coperator
+    fn copy b = {
+        result = weakcast b malloc sizeof b
+        result.type = b.type
+        result.len = b.len 
+        result.typeSize = b.typeSize
+        result.strfmt = b.strfmt
+        result.mem = malloc result.len * (sizeof b.type)
+        for i b.len : memindexset result.mem i (sizeof b.type) copy weakcast result.type memindex b.mem i (sizeof b.type)
+        result
+    }
+
+    #droperator
+    fn drop b = {
+        for i b.len : drop weakcast b.type memindex b.mem i (sizeof b.type)
+        free b.mem
+    }
+]
+
+fn initbuffelements b e = {
+    for i b.len : b[i] = e
+}
