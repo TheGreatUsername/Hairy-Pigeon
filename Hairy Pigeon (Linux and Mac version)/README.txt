@@ -8,4 +8,4 @@ Compiler flags:
   -S show asm
   -c produce object file
   -o name output file
-  
+  -static pruduce static library
