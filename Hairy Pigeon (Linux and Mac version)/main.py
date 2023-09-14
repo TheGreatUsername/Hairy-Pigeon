@@ -81,6 +81,7 @@ def extractbyext(ext, args=args):
 cfiles = extractbyext(['c', 'h'])
 cppfiles = extractbyext(['cpp', 'hpp'])
 ofiles = extractbyext('o')
+staticlibs = extractbyext('a')
 
 rc = subprocess.Popen('nasm -v >/dev/null 2>&1', shell=True).wait()
 if rc != 0 and not '-O' in flags:
@@ -113,20 +114,23 @@ copyuses(tocomp)
 
 isoptimize = '-O' in flags
 ismakeobject = '-c' in flags
+ismakestaticlib = '-static' in flags
+ismakedynamiclib = '-dynamic' in flags
 consumec = cfiles or cppfiles
-obj = compiler.start(tocomp, optimize=isoptimize, ismakeobject=(ismakeobject or consumec))
+nomain = ismakeobject or consumec or ismakestaticlib
+obj = compiler.start(tocomp, optimize=isoptimize, ismakeobject=nomain)
 cargs = obj['cargs']
-for s in cargs.split(' ') + cfiles + cppfiles:
-    if getext(s) in ['o', 'c', 'h', 'cpp', 'hpp'] : copy(originaldir, f'{scriptdir}/CompileDirectory', s)
+for s in cargs.split(' ') + cfiles + cppfiles + staticlibs:
+    if getext(s) in ['o', 'c', 'h', 'cpp', 'hpp', 'a'] : copy(originaldir, f'{scriptdir}/CompileDirectory', s)
 
-objectstr = '-c' if ismakeobject or consumec else ''
-if isoptimize : command = f"{cc} -O3 rout.c {objectstr} {cargs} 2>&1 | ./onlyshowerr"
+objectstr = '-c' if nomain else ''
+if isoptimize : command = f"{cc} -O3 rout.c {objectstr} {cargs} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
 else : command = f"nasm -fmacho64 rout.asm && clang -Wl,-no_pie file.o rout.o {objectstr} {cargs} 2>&1 | ./onlyshowerr"
 subprocess.Popen(command, shell=True).wait()
 
+objs = ['rout.o']
 if consumec:
     procs = []
-    objs = ['rout.o']
     #cheaders = extractbyext('h', cfiles)
     ccodes = extractbyext('c', cfiles)
     cppcodes = extractbyext('cpp', cppfiles)
@@ -145,7 +149,12 @@ if consumec:
         objs.append(n)
     for p in procs : p.wait()
     if cppcodes : cc = ccpp
-    command = f"{cc} {' '.join(objs)} 2>&1 | ./onlyshowerr"
+    if not ismakestaticlib and not ismakedynamiclib:
+        command = f"{cc} {' '.join(objs)} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
+        subprocess.Popen(command, shell=True).wait()
+
+if ismakestaticlib:
+    command = f"ar rcs {outname}.a {' '.join(objs)} 2>&1 | ./onlyshowerr"
     subprocess.Popen(command, shell=True).wait()
 
 cwd = os.getcwd()
@@ -168,6 +177,9 @@ if '-S' in flags:
 if ismakeobject:
     shutil.copyfile(cwd + '/rout.o', cwd + '/' + outname + '.o')
     copy(cwd, originaldir, outname + '.o')
+
+if ismakestaticlib:
+    copy(cwd, originaldir, outname + '.a')
 
 files = glob.glob(f'{scriptdir}/CompileDirectory/*')
 for f in files:
