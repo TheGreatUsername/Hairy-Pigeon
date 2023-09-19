@@ -75,6 +75,7 @@ casekey = 'case'
 pragmakey = 'pragma'
 importkey = 'import'
 nomanglekey = 'export'
+iskey = 'is'
 argckey = 'sys_argc'
 argvkey = 'sys_argv'
 allockey = 'sys_alloc'
@@ -95,6 +96,7 @@ importedfuncs = []
 output = ''
 outstk = []
 curvars = {}
+constvars = []
 structsizes = {}
 structprops = {}
 structtraits = {}
@@ -369,9 +371,11 @@ def compilefunc(name, types, at=None, isnomangle=False):
     if not isfunccompiled(name, types) or isnomangle:
         global toki
         global curvars
+        global constvars
         global todrop
         oldtoki = toki
         oldcurvars = curvars.copy()
+        oldconstvars = constvars.copy()
         oldtodrop = todrop.copy()
         toki = funclocs[name]
         if at != None:
@@ -455,6 +459,7 @@ def compilefunc(name, types, at=None, isnomangle=False):
         outrp()
         toki = oldtoki
         curvars = oldcurvars
+        constvars = oldconstvars
         todrop = oldtodrop
         
 def docall(name):
@@ -970,7 +975,11 @@ def doparens():
     return result
 
 def doassign(v):
-    getok()
+    if v in constvars:
+        err(f"cannot reassign to constant '{v}'")
+    assignkey = getok()
+    if assignkey == iskey:
+        constvars.append(v)
     try : type = curvars[v]
     except : type = None
     out(f"(= {v}")
@@ -1407,7 +1416,7 @@ def exprsub():
     elif t[0] == "'" : result = dochar(t)
     elif isint(t) : result = donum(t)
     elif t in ops : result = doprefixop(t)
-    elif toptok() == '=' : result = doassign(t)
+    elif toptok() in ['=', iskey] : result = doassign(t)
     elif toptok() == '.(' : result = dotypeassert(t)
     elif t in curvars and curvars[t] != None : result = dovar(t)
     elif hasfunc(t) : result = docall(t)
@@ -1592,7 +1601,7 @@ def dofoundfn(dotypes=False):
                     t = getok()
                     if toptok() == '{' : depth += 1
                     elif toptok() == '}' : depth -= 1
-                    elif toptok() == '=' and lasttok != glokey : vars.append(t)
+                    elif toptok() in ['=', iskey] and lasttok != glokey : vars.append(t)
                     elif toptok() == fnkey : dofoundfn()
                     lasttok = t
             else:
@@ -1602,7 +1611,7 @@ def dofoundfn(dotypes=False):
                     t = getok()
                     if toptok() == '{' : depth += 1
                     elif toptok() == '}' : depth -= 1
-                    elif toptok() == '=' and lasttok != glokey : vars.append(t)
+                    elif toptok() in ['=', iskey] and lasttok != glokey : vars.append(t)
                     elif toptok() == fnkey : dofoundfn()
                     lasttok = t
             funcvars[name] = vars
