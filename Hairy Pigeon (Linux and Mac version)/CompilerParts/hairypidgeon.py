@@ -73,22 +73,25 @@ lambdakey = 'lambda'
 haspropkey = 'hasprop'
 casekey = 'case'
 pragmakey = 'pragma'
-nomanglekey = 'nomangle'
+importkey = 'import'
+nomanglekey = 'export'
 argckey = 'sys_argc'
 argvkey = 'sys_argv'
 allockey = 'sys_alloc'
 freekey = 'sys_free'
 structtostrkey = 'sys_structtostr'
+rettypekey = '->'
 typekeys = [intkey, chrkey, fltkey, voidkey, memkey]
 types = {typekeys[i] : i for i in range(len(typekeys))}
 ops = ['+', '-', '*', '/', '%', '==', '!=', '<', '>', '<=', '>=']
 boolops = ['and', 'or']
-decfunctypes = {}    
+decfunctypes = {}
 functypes = {}
 funcargs = {}
 funclocs = {}
 funcvars = {}
 funccopyvars = {}
+importedfuncs = []
 output = ''
 outstk = []
 curvars = {}
@@ -249,6 +252,12 @@ def manglefunc(name, types):
     
 def getfp(name, types):
     return manglefunc(name, types) + '_fp'
+
+def addimportedfunc(name):
+    importedfuncs.append(name)
+
+def isimportedfunc(name):
+    return name in importedfuncs
     
 def gettypesize(t):
     if t == types[chrkey] : return 1
@@ -380,13 +389,13 @@ def compilefunc(name, types, at=None, isnomangle=False):
             out(manglefunc(name, types))
         outlp()
         args = []
-        while toptok() not in ['>', '=']:
+        while toptok() not in [rettypekey, '=']:
             t = getok()
             if t != '^':
                 out(t)
                 args.append(t)
         outrp()
-        if toptok() == '>':
+        if toptok() == rettypekey:
             while toptok() != '=' : getok()
         getok()
         vars = funcvars[name]
@@ -461,7 +470,7 @@ def docall(name):
     args = popout()
     compilefunc(name, types)
     outlp()
-    out(manglefunc(name, types))
+    out(name if isimportedfunc(name) else manglefunc(name, types))
     out(args)
     outrp()
     s = popout()
@@ -1343,6 +1352,21 @@ def donomangle():
         args.append(gettype())
     compilefunc(name, args, isnomangle=True)
 
+def doimport():
+    name = getok()
+    args = []
+    rettype = types[voidkey]
+    while toptok() not in ['\n', rettypekey]:
+        args.append(gettype())
+    if toptok() == rettypekey:
+        getok()
+        rettype = gettype()
+    out(f"(<<> {name} ({' '.join([str(i) for i in range(len(args))])}))")
+    setfuncargs(name, len(args))
+    setfunctype(name, args, rettype)
+    setdecfunctype(name, rettype)
+    addimportedfunc(name)
+    
 def exprsub():
     t = getok()
     result = None
@@ -1372,6 +1396,7 @@ def exprsub():
     elif t == casekey : result = docase()
     elif t == pragmakey : result = dopragma()
     elif t == nomanglekey : result = donomangle()
+    elif t == importkey : result = doimport()
     elif t in typekeys : result = dotypekey(t)
     elif t == '(' : result = doparens()
     elif t == '{' : result = doblock()
@@ -1520,12 +1545,16 @@ def findfuncs(dotypes=False):
     global toki
     toki = 0
     while not eof():
-        if toptok() == fnkey:
+        if toptok() in [fnkey, importkey]:
             dofoundfn(dotypes=dotypes)
         getok() 
     toki = 0
             
 def dofoundfn(dotypes=False):
+            if toptok() == importkey:
+                getok()
+                doimport()
+                return
             getok()
             name = getok()
             if name.strip() == '[' and toptok() == ']':
@@ -1538,7 +1567,7 @@ def dofoundfn(dotypes=False):
             argnum = 0
             args = []
             copyvars = []
-            while toptok() not in ['>', '=']:
+            while toptok() not in [rettypekey, '=']:
                 iscopy = toptok() == '^'
                 if iscopy : getok()
                 t = getok()
@@ -1546,7 +1575,7 @@ def dofoundfn(dotypes=False):
                 if iscopy : copyvars.append(t)
                 argnum += 1
             setfuncargs(name, argnum)
-            if toptok() == '>':
+            if toptok() == rettypekey:
                 if dotypes:
                     getok()
                     t = gettype()
@@ -1678,7 +1707,7 @@ def expandstrs():
         if toptok()[0] == '"':
             s = toptok()[1:-1]
             tmpvar = '__RESERVED_9876543567897654567_'
-            newtokens += ['{', tmpvar, '=', 'vec', 'chr', ';']
+            newtokens += ['(', '{', tmpvar, '=', 'vec', 'chr', ';']
             escape = False
             for c in s:
                 if escape:
@@ -1688,7 +1717,7 @@ def expandstrs():
                     escape = True
                 else:
                     newtokens += ['vpush', tmpvar, f"'{c}'", ';']
-            newtokens += [tmpvar, '}']
+            newtokens += [tmpvar, '}', ')']
         else : newtokens.append(tokens[toki])
         getok() 
     newtokens.append(';')
@@ -1711,7 +1740,7 @@ def expandlambdas():
             args = []
             typs = []
             rettype = None
-            while toptok() not in ['=', '>']:
+            while toptok() not in ['=', rettypekey]:
                 args.append(tokens[toki])
                 getok()
                 match('.(')
@@ -1724,7 +1753,7 @@ def expandlambdas():
                     getok()
                 t.pop()
                 typs.append(t)
-            if toptok() == '>':
+            if toptok() == rettypekey:
                 getok()
                 rettype = gettype()
             getok()

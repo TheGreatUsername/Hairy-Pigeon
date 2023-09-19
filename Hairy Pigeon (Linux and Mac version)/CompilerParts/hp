@@ -8,7 +8,7 @@ fn equals a b = a == b
 fn true = 1
 fn false = 0
 
-fn pass > void = 0
+fn pass -> (void) = 0
 
 fn malloc n = sys_alloc n
 
@@ -107,7 +107,7 @@ fn vpush v e = {
 
 fn exit c = cf (exit c)
 
-fn oob l i > (void) = {
+fn oob l i -> (void) = {
     #print `Out of bounds length `
     #print l
     #print ` with index `

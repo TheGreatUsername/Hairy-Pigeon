@@ -445,7 +445,23 @@ def dofunc():
     out('mov rax, {}'.format(funclabels[name]))
     push('rax')
 */
-void dofuncsub(bool ispublic) {
+void dofuncsub(bool ispublic, bool isextern) {
+    if (isextern) {
+        gettok();
+        auto name = gettok();
+        match("(");
+        out("gt");
+        out(name);
+        out("(");
+        while (toptok() != ")") {
+            out("gt");
+            gettok();
+            if (toptok() != ")") out(",");
+        }
+        out(");");
+        gettok();
+        return;
+    }
     pushout();
     auto oldfuncargs = funcargs;
     auto oldcurvars = curvars;
@@ -492,11 +508,15 @@ void dofuncsub(bool ispublic) {
 }
 
 void dofunc() {
-    dofuncsub(false);
+    dofuncsub(false, false);
 }
 
 void dopublicfunc() {
-    dofuncsub(true);
+    dofuncsub(true, false);
+}
+
+void doexternfunc() {
+    dofuncsub(false, true);
 }
 
 void docall() {
@@ -826,6 +846,7 @@ void sexpr(){
     else if (mapcontainskey(fltops, t)) dofltop();
     else if (toptok() == "<>") dofunc(); //+normal c func (need map to hold each func)
     else if (toptok() == "<>>") dopublicfunc();
+    else if (toptok() == "<<>") doexternfunc();
     else if (toptok() == "?") doif(); //+ternary with statement expr
     else if (toptok() == "??") dowhile(); //+c while with expression statement returning 0
     else if (toptok() == "=") doassign(); //+use long type for first occurance
@@ -858,7 +879,7 @@ void findfuncs() {
     auto oldtokens = tokens;
     while (tokens.size() > 1) {
         auto s = gettok();
-        if (s == "<>" || s == "<>>") {
+        if (s == "<>" || s == "<>>" || s == "<<>") {
             auto name = gettok();
             match("(");
             vector<string> args;
@@ -866,7 +887,7 @@ void findfuncs() {
                 args.push_back(gettok());
             }
             funclabels[name] = newname(name);
-            if (s == "<>>") funclabels[name] = name;
+            if (s == "<>>" || s == "<<>") funclabels[name] = name;
             funcs[name] = args;
         } else if (s == ":=") {
             auto name = gettok();
