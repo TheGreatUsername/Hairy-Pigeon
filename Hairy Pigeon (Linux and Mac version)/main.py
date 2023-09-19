@@ -9,6 +9,10 @@ from pathlib import Path
 cc = 'gcc'
 ccpp = 'g++'
 
+ccargs = ''
+#changing optimizations to exec size because it's faster than -O3
+ccargs = '-s -Os'
+
 def touch(path):
     try:
         with open(path, 'a') as _ : pass
@@ -46,6 +50,9 @@ originaldir = os.getcwd()
 scriptdir = __file__[:__file__.rindex('/')]
 
 args = sys.argv[1:]
+
+#defaulting to always optimizing
+if not '-O' in args : args.append('-O')
 
 rename = None
 
@@ -124,7 +131,7 @@ for s in cargs.split(' ') + cfiles + cppfiles + staticlibs:
     if getext(s) in ['o', 'c', 'h', 'cpp', 'hpp', 'a'] : copy(originaldir, f'{scriptdir}/CompileDirectory', s)
 
 objectstr = '-c' if nomain else ''
-if isoptimize : command = f"{cc} -O3 rout.c {objectstr} {cargs} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
+if isoptimize : command = f"{cc} -O3 {ccargs} rout.c {objectstr} {cargs} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
 else : command = f"nasm -fmacho64 rout.asm && clang -Wl,-no_pie file.o rout.o {objectstr} {cargs} 2>&1 | ./onlyshowerr"
 subprocess.Popen(command, shell=True).wait()
 
@@ -138,19 +145,19 @@ if consumec:
     for f in ccodes:
         n = f'c{i}.o'
         i += 1
-        command = f"{cc} -O3 -c {f} -o {n}"
+        command = f"{cc} -O3 {ccargs} -c {f} -o {n}"
         procs.append(subprocess.Popen(command, shell=True))
         objs.append(n)
     for f in cppcodes:
         n = f'c{i}.o'
         i += 1
-        command = f"{ccpp} -O3 -c {f} -o {n}"
+        command = f"{ccpp} -O3 {ccargs} -c {f} -o {n}"
         procs.append(subprocess.Popen(command, shell=True))
         objs.append(n)
     for p in procs : p.wait()
     if cppcodes : cc = ccpp
     if not ismakestaticlib and not ismakedynamiclib:
-        command = f"{cc} {' '.join(objs)} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
+        command = f"{cc} -O3 {ccargs} {' '.join(objs)} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
         subprocess.Popen(command, shell=True).wait()
 
 if ismakestaticlib:
@@ -169,7 +176,7 @@ copy(cwd, originaldir, outname)
 
 if '-S' in flags:
     if '-O' in flags:
-        subprocess.Popen(f'{cc} -O3 -S -masm=intel rout.c 2>&1 | ./onlyshowerr', shell=True).wait()
+        subprocess.Popen(f'{cc} {ccargs} -O3 -S -masm=intel rout.c 2>&1 | ./onlyshowerr', shell=True).wait()
         shutil.copyfile(cwd + '/rout.s', cwd + '/rout.asm')
     shutil.copyfile(cwd + '/rout.asm', cwd + '/' + outname + '.asm')
     copy(cwd, originaldir, outname + '.asm')

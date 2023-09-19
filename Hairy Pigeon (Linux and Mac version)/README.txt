@@ -1,9 +1,6 @@
-cd into the directory and type "python3 setup.py" to install
-
-compile with "pigeon filename"
+Compile with "pigeon filename"
 
 Compiler flags:
-  -O optimizations on
   -run execute after compiling
   -S show asm
   -c produce object file
