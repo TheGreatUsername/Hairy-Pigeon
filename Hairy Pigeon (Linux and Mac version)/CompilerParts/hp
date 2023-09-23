@@ -264,7 +264,6 @@ fn vtostr v = {
     | hasprop v len : {
         for e v : {
             vextend r (tostr e) + ", "
-            #vextend r ", "
         }
         | r != "[" : {
             vpop r
