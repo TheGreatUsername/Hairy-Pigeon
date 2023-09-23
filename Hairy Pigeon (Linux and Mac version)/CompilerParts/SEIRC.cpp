@@ -465,6 +465,7 @@ void dofuncsub(bool ispublic, bool isextern) {
     pushout();
     auto oldfuncargs = funcargs;
     auto oldcurvars = curvars;
+    auto oldcurfunc = curfunc;
     curvars = vector<string>();
     gettok();
     auto name = gettok();
@@ -493,6 +494,7 @@ void dofuncsub(bool ispublic, bool isextern) {
     out("return ({");
     while (toptok() != ")") {
         expr();
+        //curfunc = name;
         out(";");
     }
     out("});}");
@@ -503,6 +505,7 @@ void dofuncsub(bool ispublic, bool isextern) {
     out(retbody);
     funcargs = oldfuncargs;
     curvars = oldcurvars;
+    curfunc = oldcurfunc;
     funcbodies[name] = popout();
     out("(gt){}", funclabels.at(name));
 }
@@ -872,7 +875,10 @@ void expr(){
     else if (veccontains(funcargs, t)) doarg();
     else if (mapcontainskey(globals, t)) doglobal();
     else if (t.at(0) == '"') dostr();
-    else err("malformed expression '{}'", t);
+    else {
+        for (auto e : curvars) cout<<e<<", ";
+        err("malformed expression '{}'", t);
+    }
 }
 
 void findfuncs() {
