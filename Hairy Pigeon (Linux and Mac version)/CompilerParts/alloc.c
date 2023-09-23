@@ -54,3 +54,7 @@ void *aalloc(sizetype size) {
     }
     return result;
 }
+
+sizetype amemused() {
+    return tapeind;
+}
