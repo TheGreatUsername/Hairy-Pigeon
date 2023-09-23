@@ -263,7 +263,6 @@ fn vtostr v = {
     r = "["
     | hasprop v len : {
         for e v : {
-            cf (putchar '\n')
             vextend r (tostr e) + ", "
             #vextend r ", "
         }
