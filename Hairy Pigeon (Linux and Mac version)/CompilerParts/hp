@@ -56,7 +56,7 @@ fn vec t_ = {
             result
         }
         fn + a b = {
-            result = clone a
+            result = a
             | eqtype a.t b : vpush result b
             | eqtype a b : result = vadd a b
             result
@@ -153,9 +153,9 @@ fn vextend a b = {
 }
 
 fn vadd a b = {
-    a = clone a
-    vextend a b
-    a
+    r = clone a
+    vextend r b
+    r
 }
 
 fn str = vec chr
@@ -175,7 +175,8 @@ fn vreverse v = {
     result
 }
 
-fn inttostr n = {
+fn inttostr n_ = {
+    n = n_
     result = ""
     isneg = false
     | n < 0 : {
@@ -261,7 +262,11 @@ fn vslice v s e = {
 fn vtostr v = {
     r = "["
     | hasprop v len : {
-        for e v : vextend r (tostr e) + ", "
+        for e v : {
+            cf (putchar '\n')
+            vextend r (tostr e) + ", "
+            #vextend r ", "
+        }
         | r != "[" : {
             vpop r
             vpop r
@@ -297,7 +302,7 @@ fn vfindstr v s = {
  
 fn vhasstr v s = (vfindstr v s) != -1
 
-fn nosuchkey k = {
+fn nosuchkey k -> (void) = {
     println $"Error: map has no such key '{k}'"
     exit 1
 }
@@ -307,11 +312,7 @@ fn map kt_ vt_ = {[
     values = vec vt_
     strfmt = mapfmt
     fn [] m k = {
-        k.((mkeys m).t)
-        | not vhas mkeys m k : nosuchkey k
-        result = vget m.values 0
-        for i m.keys.len : | (vget m.keys i) == k : result = m.values[i]
-        result
+        mget m k 
     }
     fn []= m i e = {
         mset m i e
@@ -338,9 +339,14 @@ fn mset m k v = {
 }
 
 fn mget m k = {
-    k.(m.keys.t)
+    #k.(m.keys.t)
+    #result = vget m.values 0
+    #for i m.keys.len : | (vget m.keys i) == k : result = vget m.values i
+    #result
+    k.((mkeys m).t)
+    | not vhas mkeys m k : nosuchkey k
     result = vget m.values 0
-    for i m.keys.len : | (vget m.keys i) == k : result = vget m.values i
+    for i m.keys.len : | (vget m.keys i) == k : result = m.values[i]
     result
 }
 

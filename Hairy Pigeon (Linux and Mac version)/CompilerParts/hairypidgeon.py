@@ -45,7 +45,7 @@ def usecmalloc():
     global freefunc
     allocfunc = 'malloc'
     freefunc = 'free'
-#usecmalloc()
+usecmalloc()
 
 fnkey = 'fn'
 forkey = 'for'
@@ -89,6 +89,7 @@ boolops = ['and', 'or']
 decfunctypes = {}
 functypes = {}
 funcargs = {}
+funcargnames = {}
 funclocs = {}
 funcvars = {}
 funccopyvars = {}
@@ -105,6 +106,7 @@ glos = []
 glotypes = {}
 vectypes = []
 maptypes = []
+curfunc = ''
 
 def out(s):
     global output
@@ -373,11 +375,14 @@ def compilefunc(name, types, at=None, isnomangle=False):
         global curvars
         global constvars
         global todrop
+        global curfunc
         oldtoki = toki
         oldcurvars = curvars.copy()
         oldconstvars = constvars.copy()
         oldtodrop = todrop.copy()
+        oldcurfunc = curfunc
         toki = funclocs[name]
+        curfunc = name
         if at != None:
             toki = at
         todrop = {}
@@ -398,6 +403,7 @@ def compilefunc(name, types, at=None, isnomangle=False):
             if t != '^':
                 out(t)
                 args.append(t)
+        funcargnames[name] = args[:]
         outrp()
         if toptok() == rettypekey:
             while toptok() != '=' : getok()
@@ -461,6 +467,7 @@ def compilefunc(name, types, at=None, isnomangle=False):
         curvars = oldcurvars
         constvars = oldconstvars
         todrop = oldtodrop
+        curfunc = oldcurfunc
         
 def docall(name):
     argnum = getfuncargs(name)
@@ -977,17 +984,32 @@ def doparens():
 def doassign(v):
     if v in constvars:
         err(f"cannot reassign to constant '{v}'")
+    if curfunc != '' and v in funcargnames[curfunc]:
+        err(f"cannot reassign to function parameter '{v}'")
     assignkey = getok()
     if assignkey == iskey:
         constvars.append(v)
     try : type = curvars[v]
     except : type = None
-    out(f"(= {v}")
+    pushout()
     result = expr()
+    e = popout()
     if type == None:
         curvars[v] = result
     elif type != result:
         expect(typetotext(type), typetotext(result))
+    assignbycopy = curfunc != copykey and isstruct(curvars[v]) and (curfunc == '' or v not in funcargnames[curfunc])
+    #assignbycopy = False
+    if assignbycopy : todrop[v] = curvars[v]
+    tmpvar = newid('todropafterassignment')
+    out('({}')
+    if assignbycopy : out(f'(= {tmpvar} {v})')
+    out(f'(= {v}')
+    if assignbycopy : copy(e, result)
+    else : out(e)
+    outrp()
+    if assignbycopy : drop(tmpvar, curvars[v])
+    out(v)
     outrp()
     return result
 
@@ -1715,7 +1737,7 @@ def expandstrs():
     while not eof():
         if toptok()[0] == '"':
             s = toptok()[1:-1]
-            tmpvar = '__RESERVED_9876543567897654567_'
+            tmpvar = f'__RESERVED_9876543567897654567{toki}_'
             newtokens += ['(', '{', tmpvar, '=', 'vec', 'chr', ';']
             escape = False
             for c in s:
