@@ -131,12 +131,20 @@ fn vget v i = {
     weakcast v.t memindex v.mem i 8
 }
 
+fn vqget v i = weakcast v.t memindex v.mem i 8
+
 fn vset v i e = {
     vchecktype v e
     checkoob v i
     drop weakcast v.t memindex v.mem i 8
     memindexset v.mem i 8 copy weakcast v.t e #memindex v.mem i 8
     e
+}
+
+fn vqset v i e = {
+    vchecktype v e
+    drop weakcast v.t memindex v.mem i 8
+    memindexset v.mem i 8 copy weakcast v.t e 
 }
 
 fn vhas v e = {
