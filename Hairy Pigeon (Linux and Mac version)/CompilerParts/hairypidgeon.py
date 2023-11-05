@@ -81,6 +81,8 @@ argvkey = 'sys_argv'
 allockey = 'sys_alloc'
 freekey = 'sys_free'
 structtostrkey = 'sys_structtostr'
+vgetkey = 'sys_vget'
+vsetkey = 'sys_vset'
 rettypekey = '->'
 typekeys = [intkey, chrkey, fltkey, voidkey, memkey]
 types = {typekeys[i] : i for i in range(len(typekeys))}
@@ -1879,8 +1881,25 @@ def blockifyfuncs():
     #print(' '.join(tokens).replace(';', '\n'))
     if unblockedfound : blockifyfuncs()
 
+def onetokexp(isnoboundscheck):
+    global toki
+    global tokens
+    toki = 0
+    newtoks = []
+    replace = {
+        vgetkey : 'vqget' if isnoboundscheck else 'vget',
+        vsetkey : 'vqset' if isnoboundscheck else 'vset',
+    }
+    while not eof():
+        t = tokens[toki]
+        if t in replace : t = replace[t]
+        newtoks.append(t)
+        getok()
+    tokens = newtoks
+    toki = 0
+
 cargs = ''
-def start(srcname, optimize=False, ismakeobject=False):
+def start(srcname, optimize=False, ismakeobject=False, isnoboundscheck=False):
     global tokens
     global cargs
     cargs = ''
@@ -1888,6 +1907,7 @@ def start(srcname, optimize=False, ismakeobject=False):
     src = open(srcname).read()
     tokens = ['use', '"hp"', ';'] + tokenize(src)
     douses()
+    onetokexp(isnoboundscheck)
     expandfstrs()
     expandstrs()
     expandlambdas()

@@ -68,11 +68,12 @@ fn vec t_ = {
             r
         }
         fn [] v i = {
-            checkoob v i
-            weakcast v.t memindex v.mem i 8
+            #checkoob v i
+            #weakcast v.t memindex v.mem i 8
+            sys_vget v i
         }
         fn []= v i e = {
-            vset v i e
+            sys_vset v i e
         }
         fn copy v = {
             result = weakcast v malloc sizeof v

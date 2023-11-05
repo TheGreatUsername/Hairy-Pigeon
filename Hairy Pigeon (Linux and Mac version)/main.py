@@ -13,6 +13,10 @@ ccargs = ''
 #changing optimizations to exec size because it's faster than -O3
 ccargs = '-s -Os'
 
+oldopt = '-OO'
+
+opt = '-O'
+
 def touch(path):
     try:
         with open(path, 'a') as _ : pass
@@ -52,7 +56,7 @@ scriptdir = __file__[:__file__.rindex('/')]
 args = sys.argv[1:]
 
 #defaulting to always optimizing
-if not '-O' in args : args.append('-O')
+if not oldopt in args : args.append(oldopt)
 
 rename = None
 
@@ -91,7 +95,7 @@ ofiles = extractbyext('o')
 staticlibs = extractbyext('a')
 
 rc = subprocess.Popen('nasm -v >/dev/null 2>&1', shell=True).wait()
-if rc != 0 and not '-O' in flags:
+if rc != 0 and not oldopt in flags:
     print("nasm isn't installed. Try installing nasm or compiling with -O.")
     sys.exit(1)
 
@@ -119,13 +123,14 @@ def copyuses(tocomp):
 
 copyuses(tocomp)
 
-isoptimize = '-O' in flags
+isnoboundscheck = opt in flags
+isoptimize = oldopt in flags
 ismakeobject = '-c' in flags
 ismakestaticlib = '-static' in flags
 ismakedynamiclib = '-dynamic' in flags
 consumec = cfiles or cppfiles
 nomain = ismakeobject or consumec or ismakestaticlib
-obj = compiler.start(tocomp, optimize=isoptimize, ismakeobject=nomain)
+obj = compiler.start(tocomp, optimize=isoptimize, ismakeobject=nomain, isnoboundscheck=isnoboundscheck)
 cargs = obj['cargs']
 for s in cargs.split(' ') + cfiles + cppfiles + staticlibs:
     if getext(s) in ['o', 'c', 'h', 'cpp', 'hpp', 'a'] : copy(originaldir, f'{scriptdir}/CompileDirectory', s)
@@ -175,7 +180,7 @@ if rename:
 copy(cwd, originaldir, outname)
 
 if '-S' in flags:
-    if '-O' in flags:
+    if oldopt in flags:
         subprocess.Popen(f'{cc} {ccargs} -O3 -S -masm=intel rout.c 2>&1 | ./onlyshowerr', shell=True).wait()
         shutil.copyfile(cwd + '/rout.s', cwd + '/rout.asm')
     shutil.copyfile(cwd + '/rout.asm', cwd + '/' + outname + '.asm')
