@@ -45,7 +45,7 @@ def usecmalloc():
     global freefunc
     allocfunc = 'malloc'
     freefunc = 'free'
-usecmalloc()
+#usecmalloc()
 
 fnkey = 'fn'
 forkey = 'for'
@@ -381,6 +381,7 @@ def compilefunc(name, types, at=None, isnomangle=False):
         oldconstvars = constvars.copy()
         oldtodrop = todrop.copy()
         oldcurfunc = curfunc
+        constvars = []
         toki = funclocs[name]
         curfunc = name
         if at != None:
@@ -938,35 +939,41 @@ def dostruct(base=None):
         for i in range(1, len(args)):
             size = 8
             compilefunc('tostr', [types[i]])
+            tmp = newid('tmp')
             if i == 1:
                 out(f'({manglefunc("vextend", [strtype, strtype])}')
                 out('result')
-                out(f'({manglefunc("cstrtovec", [memtype])} "["')
+                out(f'(= {tmp} ({manglefunc("cstrtovec", [memtype])} "[")')
                 outrp()
                 outrp()
+                drop(tmp, strtype)
             out(f'({manglefunc("vextend", [strtype, strtype])}')
             out('result')
-            out(f'({manglefunc("cstrtovec", [memtype])} "{args[i]} = "')
+            out(f'(= {tmp} ({manglefunc("cstrtovec", [memtype])} "{args[i]} = "))')
             outrp()
-            outrp()
+            drop(tmp, strtype)
             out(f'({manglefunc("vextend", [strtype, strtype])}')
             out('result')
-            out(f'({manglefunc("tostr", [types[i]])}')
+            out(f'(= {tmp} ({manglefunc("tostr", [types[i]])}')
             out(f"(!! struct {i} {size})")
             outrp()
             outrp()
+            outrp()
+            drop(tmp, strtype)
             if i != len(args)-1:
                 out(f'({manglefunc("vextend", [strtype, strtype])}')
                 out('result')
-                out(f'({manglefunc("cstrtovec", [memtype])} ", "')
+                out(f'(= {tmp} ({manglefunc("cstrtovec", [memtype])} ", ")')
                 outrp()
                 outrp()
+                drop(tmp, strtype)
             else:
                 out(f'({manglefunc("vextend", [strtype, strtype])}')
                 out('result')
-                out(f'({manglefunc("cstrtovec", [memtype])} "]"')
+                out(f'(= {tmp} ({manglefunc("cstrtovec", [memtype])} "]")')
                 outrp()
                 outrp()
+                drop(tmp, strtype)
         out('result')
         outrp()
     elif not prevexisted:
@@ -1316,8 +1323,16 @@ def dofp():
     return hashfp(name, typs)
     
 def dofpexec():
+    global toki
+    oldtoki = toki
+    pushout()
     out('(\\>')
     fpt = expr()
+    s = popout()
+    if not isfp(fpt):
+        toki = oldtoki
+        return doprefixop('*')
+    out(s)
     argtypes = fpargs(fpt)
     for a in argtypes:
         t = expr()

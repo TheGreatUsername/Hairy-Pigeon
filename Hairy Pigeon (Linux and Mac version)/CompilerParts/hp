@@ -617,5 +617,19 @@ fn carray pointer = [
     } 
 ]
 
+fn cos n = weakcast flt cf (hpcos toflt n)
+fn sin n = weakcast flt cf (hpsin toflt n)
+fn acos n = weakcast flt cf (hpacos toflt n)
+fn asin n = weakcast flt cf (hpasin toflt n)
+fn atan2 a b = weakcast flt cf (hpatan2 toflt a toflt b)
+fn pi = weakcast flt cf (hppi)
+fn sqrt n = weakcast flt cf (hpsqrt toflt n)
+
+fn pow b p -> (int) = {
+    | p : b * pow b p - 1
+    | _ : 1 
+} 
+fn lsh n s = n * pow 2 s
+
 #bullshit to prevent asm errors
 ["h" : "h"]

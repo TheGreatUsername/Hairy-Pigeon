@@ -2,8 +2,12 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include "string.h"
+#include "math.h"
 
 #include "alloc.c"
+
+#define longify(n) (*(long*)&n)
+#define dubify(n) (*(double*)&n)
 
 #ifdef __APPLE__
     int ismac() {return 1;}
@@ -70,3 +74,38 @@ void printdub(long d) {
 }
 
 void noop(long e) {}
+
+long hpcos(long n) {
+    double d = cos(dubify(n));
+    return longify(d);
+}
+
+long hpsin(long n) {
+    double d = sin(dubify(n));
+    return longify(d);
+}
+
+long hpacos(long n) {
+    double d = acos(dubify(n));
+    return longify(d);
+}
+
+long hpasin(long n) {
+    double d = asin(dubify(n));
+    return longify(d);
+}
+
+long hpatan2(long n, long o) {
+    double d = atan2(dubify(n), dubify(o));
+    return longify(d);
+}
+
+long hpsqrt(long n) {
+    double d = sqrt(dubify(n));
+    return longify(d);
+}
+
+long hppi() {
+    double d = M_PI;
+    return longify(d);
+}
