@@ -755,6 +755,7 @@ def dovec(fs, ft, isspread=False):
     else:
         compilefunc(name, types)
         vt = getfunctype(name, types)
+    drop(resultid, vt)
     compilefunc('vpush', [vt, ft])
     compilefunc('vextend', [vt, vt])
     firstvalid = newid('firstval')
@@ -792,6 +793,7 @@ def dovec(fs, ft, isspread=False):
     match(']')
     out(resultid)
     outrp()
+    todrop[resultid] = vt
     return vt
         
 memtype = types[memkey]
