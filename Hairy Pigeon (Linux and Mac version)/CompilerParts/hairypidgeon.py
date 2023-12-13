@@ -334,9 +334,10 @@ def drop(v, type):
             #setdecfunctype(dropkey, oldft)
             mf = manglefunc(dropkey, [type])
             out(f"({mf} {v})")
-        for p in props:
-            if isstruct(p[1]):
-                drop(f"(!! {v} {getstructpropoffset(type, p[0])} 8)", p[1])
+        else:
+            for p in props:
+                if isstruct(p[1]):
+                    drop(f"(!! {v} {getstructpropoffset(type, p[0])} 8)", p[1])
         out(f"(@ {freefunc} {v})")
         out(") 0)")
     else:
@@ -756,7 +757,7 @@ def dovec(fs, ft, isspread=False):
         compilefunc(name, types)
         vt = getfunctype(name, types)
     drop(resultid, vt)
-    compilefunc('vpush', [vt, ft])
+    compilefunc('vvoidpush', [vt, ft])
     compilefunc('vextend', [vt, vt])
     firstvalid = newid('firstval')
     out(f'(= {firstvalid} {fs})')
@@ -785,7 +786,7 @@ def dovec(fs, ft, isspread=False):
         a = args[i]
         t = types[i]
         if t == ft:
-            out(f"({manglefunc('vpush', [vt, ft])} {resultid} {a})")
+            out(f"({manglefunc('vvoidpush', [vt, ft])} {resultid} {a})")
         elif t == vt:
             out(f"({manglefunc('vextend', [vt, vt])} {resultid} {a})")
         else:
@@ -1906,6 +1907,7 @@ def start(srcname, optimize=False, ismakeobject=False, isnoboundscheck=False):
     global cargs
     cargs = ''
     if not optimize : usecmalloc()
+    #usecmalloc()
     src = open(srcname).read()
     tokens = ['use', '"hp"', ';'] + tokenize(src)
     douses()

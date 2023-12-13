@@ -17,13 +17,13 @@ fn free p = sys_free p
 fn vecfmt = 0
 fn mapfmt = 1
 
-fn vec t_ = {
-    cap_ = 8
+fn vec t = {
+    cap = 8
     [
-        cap = cap_
+        cap = cap
         len = 0
-        t = t_
-        mem = malloc cap_ * 8
+        t = t
+        mem = malloc cap * 8
         strfmt = vecfmt
         fn == a b = {
             | a.len != b.len : false
@@ -87,6 +87,7 @@ fn vec t_ = {
         }
         fn drop v = {
             for i v.len : drop weakcast v.t memindex v.mem i 8
+            | hasprop (v.t) _ : drop v.t
             free v.mem
         }
     ]
@@ -104,6 +105,19 @@ fn vpush v e = {
         v.mem = newmem
     }
     e
+}
+
+fn vvoidpush v e -> (void) = {
+    vchecktype v e
+    memindexset v.mem v.len 8 copy e
+    v.len = v.len + 1
+    | v.len == v.cap : {
+        v.cap = v.cap * 2
+        newmem = malloc v.cap * 8
+        for i v.len : memindexset newmem i 8 memindex v.mem i 8
+        free v.mem
+        v.mem = newmem
+    }
 }
 
 fn exit c = cf (exit c)
