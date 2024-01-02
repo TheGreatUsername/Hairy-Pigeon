@@ -1,7 +1,7 @@
 #include "stdlib.h"
 
 #define tapesize 2000000000//20000000000
-#define SIZETOL 1 //128
+#define SIZETOL 128 //1
 #define ABS(n) ((n) < 0 ? -(n) : (n))
 #define GETSIZE(m) (((long*)m)[-1])
 #define NULLDEREF(p) ((p) ? *(p) : NULL)

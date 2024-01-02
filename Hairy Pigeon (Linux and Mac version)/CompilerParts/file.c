@@ -3,6 +3,9 @@
 #include "unistd.h"
 #include "string.h"
 #include "math.h"
+#include "inttypes.h"
+#include "time.h"
+#include "errno.h"    
 
 #include "alloc.c"
 
@@ -108,4 +111,33 @@ long hpsqrt(long n) {
 long hppi() {
     double d = M_PI;
     return longify(d);
+}
+
+int64_t epochms()
+{
+    struct timespec now;
+    timespec_get(&now, TIME_UTC);
+    return ((int64_t) now.tv_sec) * 1000 + ((int64_t) now.tv_nsec) / 1000000;
+}
+
+/* msleep(): Sleep for the requested number of milliseconds. */
+int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
 }

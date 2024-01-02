@@ -1890,13 +1890,18 @@ def onetokexp(isnoboundscheck):
     toki = 0
     newtoks = []
     replace = {
-        vgetkey : 'vqget' if isnoboundscheck else 'vget',
+        #vgetkey : 'vqget' if isnoboundscheck else 'vget',
         vsetkey : 'vqset' if isnoboundscheck else 'vset',
     }
     while not eof():
         t = tokens[toki]
         if t in replace : t = replace[t]
-        newtoks.append(t)
+        if t == vgetkey:
+            if not isnoboundscheck : newtoks.extend(['checkoob', 'v', 'i', ';'])
+            newtoks.extend(['weakcast', 'v', '.', 't', 'memindex', 'v', '.', 'mem', 'i', '8', ';'])
+            toki += 2
+        else:
+            newtoks.append(t)
         getok()
     tokens = newtoks
     toki = 0

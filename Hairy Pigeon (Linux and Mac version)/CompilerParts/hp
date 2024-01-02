@@ -466,6 +466,11 @@ fn toflt a = {
     | _ : weakcast flt cf (longtodub a)
 }
 
+fn tochr n = {
+    i is toint n 
+    weakcast chr i
+}
+
 fn system s = {
     cs = vectocstr s
     result = cf (system cs)
@@ -543,7 +548,7 @@ fn vrep val rep = {
     result
 }
 
-fn sleep n = cf (sleep n)
+fn sleep n = cf (msleep toint n * 1000)
 
 fn mkeys m = m.keys
 fn mvalues m = m.values
@@ -653,6 +658,25 @@ fn pow b p -> (int) = {
     | _ : 1 
 } 
 fn lsh n s = n * pow 2 s
+
+fn epochms = toint cf (epochms)
+
+fn forkwithargs f a = {
+    id is toint cf (fork)
+    | not id : { *f a; exit 0 } 
+    id 
+}
+
+fn abs n = {
+    | n >= 0 : n
+    | _ : 0 - n
+}
+
+glo sys_randseed = 0
+fn randint = {
+    | not sys_randseed : glo sys_randseed = epochms
+    glo sys_randseed = abs sys_randseed * 17669 + 94201 / 10
+}
 
 #bullshit to prevent asm errors
 ["h" : "h"]
