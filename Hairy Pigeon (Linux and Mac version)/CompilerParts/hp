@@ -261,7 +261,14 @@ fn vremove v index = {
         memindexset v.mem i 8 memindex v.mem i+1 8
     }
     - v.len 1
-    | v.len < $ v.cap / 4 : v.cap = v.cap / 4
+    ncap is v.cap / 4
+    | v.len < ncap : {
+        v.cap = ncap
+        newmem = malloc v.cap * 8
+        for i v.len : memindexset newmem i 8 memindex v.mem i 8
+        free v.mem
+        v.mem = newmem
+    }
     result
 }
 
