@@ -11,7 +11,7 @@ ccpp = 'g++'
 
 ccargs = ''
 #changing optimizations to exec size because it's faster than -O3
-ccargs = '-s -Os'
+ccargs = '-s -Os -lm'
 
 oldopt = '-OO'
 
@@ -36,6 +36,10 @@ def copyanything(src, dst):
 def copy(src, dst, name):
     Path(dst).mkdir(parents=True, exist_ok=True)
     copyanything(src + '/' + name, dst + '/' + name)
+
+def popen(command, shell=True):
+    # print('****', command)
+    return subprocess.Popen(command, shell=shell)
 
 cptocd = [
     'hp',
@@ -94,7 +98,11 @@ cppfiles = extractbyext(['cpp', 'hpp'])
 ofiles = extractbyext('o')
 staticlibs = extractbyext('a')
 
-rc = subprocess.Popen('nasm -v >/dev/null 2>&1', shell=True).wait()
+if '-h' in flags:
+    print(open(f'{scriptdir}/CompilerParts/libfns.txt').read())
+    sys.exit(0)
+
+rc = popen('nasm -v >/dev/null 2>&1', shell=True).wait()
 if rc != 0 and not oldopt in flags:
     print("nasm isn't installed. Try installing nasm or compiling with -O.")
     sys.exit(1)
@@ -136,9 +144,9 @@ for s in cargs.split(' ') + cfiles + cppfiles + staticlibs:
     if getext(s) in ['o', 'c', 'h', 'cpp', 'hpp', 'a'] : copy(originaldir, f'{scriptdir}/CompileDirectory', s)
 
 objectstr = '-c' if nomain else ''
-if isoptimize : command = f"{cc} -O3 {ccargs} rout.c {objectstr} {cargs} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
+if isoptimize : command = f"{cc} -O3 {ccargs} rout.c {objectstr} {cargs} {' '.join(staticlibs)} -lm 2>&1 | ./onlyshowerr"
 else : command = f"nasm -fmacho64 rout.asm && clang -Wl,-no_pie file.o rout.o {objectstr} {cargs} 2>&1 | ./onlyshowerr"
-subprocess.Popen(command, shell=True).wait()
+popen(command, shell=True).wait()
 
 objs = ['rout.o']
 if consumec:
@@ -151,23 +159,23 @@ if consumec:
         n = f'c{i}.o'
         i += 1
         command = f"{cc} -O3 {ccargs} -c {f} -o {n}"
-        procs.append(subprocess.Popen(command, shell=True))
+        procs.append(popen(command, shell=True))
         objs.append(n)
     for f in cppcodes:
         n = f'c{i}.o'
         i += 1
         command = f"{ccpp} -O3 {ccargs} -c {f} -o {n}"
-        procs.append(subprocess.Popen(command, shell=True))
+        procs.append(popen(command, shell=True))
         objs.append(n)
     for p in procs : p.wait()
     if cppcodes : cc = ccpp
     if not ismakestaticlib and not ismakedynamiclib:
         command = f"{cc} -O3 {ccargs} {' '.join(objs)} {' '.join(staticlibs)} 2>&1 | ./onlyshowerr"
-        subprocess.Popen(command, shell=True).wait()
+        popen(command, shell=True).wait()
 
 if ismakestaticlib:
     command = f"ar rcs {outname}.a {' '.join(objs)} 2>&1 | ./onlyshowerr"
-    subprocess.Popen(command, shell=True).wait()
+    popen(command, shell=True).wait()
 
 cwd = os.getcwd()
 touch(cwd + '/a.out')
@@ -181,7 +189,7 @@ copy(cwd, originaldir, outname)
 
 if '-S' in flags:
     if oldopt in flags:
-        subprocess.Popen(f'{cc} {ccargs} -O3 -S -masm=intel rout.c 2>&1 | ./onlyshowerr', shell=True).wait()
+        popen(f'{cc} {ccargs} -O3 -S -masm=intel rout.c 2>&1 | ./onlyshowerr', shell=True).wait()
         shutil.copyfile(cwd + '/rout.s', cwd + '/rout.asm')
     shutil.copyfile(cwd + '/rout.asm', cwd + '/' + outname + '.asm')
     copy(cwd, originaldir, outname + '.asm')
@@ -204,4 +212,4 @@ os.chmod(f'./{outname}', 0o755)
 
 if '-run' in flags:
     os.chdir(originaldir)
-    subprocess.Popen(f'./{outname}', shell=True).wait()
+    popen(f'./{outname}', shell=True).wait()

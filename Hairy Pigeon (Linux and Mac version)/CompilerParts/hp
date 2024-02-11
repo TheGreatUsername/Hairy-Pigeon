@@ -328,17 +328,21 @@ fn nosuchkey k -> (void) = {
     exit 1
 }
 
-fn map kt_ vt_ = {[
+fn map kt_ vt_ = [
     keys = vec kt_
     values = vec vt_
     strfmt = mapfmt
     fn [] m k = {
-        mget m k 
+        k.((mkeys m).t)
+        | not vhas mkeys m k : nosuchkey k
+        resulti = 0
+        for i m.keys.len : | m.keys[i] == k : resulti = i
+        m.values[resulti]
     }
     fn []= m i e = {
         mset m i e
     }
-]} 
+]
  
 fn mset m k v = {
     k.(m.keys.t)
@@ -366,8 +370,8 @@ fn mget m k = {
     #result
     k.((mkeys m).t)
     | not vhas mkeys m k : nosuchkey k
-    result = vget m.values 0
-    for i m.keys.len : | (vget m.keys i) == k : result = m.values[i]
+    result = m.values[0]
+    for i m.keys.len : | m.keys[i] == k : result = m.values[i]
     result
 }
 
@@ -503,7 +507,7 @@ fn readeof = {
 fn vfilter list f = {
     result = vec list.t
     for e list : {
-        | \> f e : vpush result e
+        | * f e : vpush result e
     }
     result
 }

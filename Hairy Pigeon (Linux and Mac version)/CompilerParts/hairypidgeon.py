@@ -827,7 +827,7 @@ def dostruct(base=None):
             else : match(',')
             skipnl()
     while toptok() != ']':
-        if toptok() == 'fn':
+        if toptok() == fnkey:
             global toki
             getok()
             if toptok().strip() == '[':
@@ -1912,7 +1912,7 @@ def start(srcname, optimize=False, ismakeobject=False, isnoboundscheck=False):
     global cargs
     cargs = ''
     if not optimize : usecmalloc()
-    #usecmalloc()
+    # usecmalloc()
     src = open(srcname).read()
     tokens = ['use', '"hp"', ';'] + tokenize(src)
     douses()

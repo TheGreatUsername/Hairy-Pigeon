@@ -35,6 +35,15 @@ copy('.', compilerfolder, 'CompilerParts')
 
 os.chdir(f'{compilerfolder}/CompilerParts')
 
+hpf = open('hp').read()
+libfns = []
+for line in hpf.split('\n'):
+    sp = line.lstrip().split(' ')
+    if len(sp) >= 2 and sp[0] == 'fn' : libfns.append(sp[1])
+libfns = list(set(libfns))
+libfns.sort()
+with open('libfns.txt', 'w') as f : f.write('\n'.join(libfns))
+
 def compile(compiler, input, output, args=''):
     return subprocess.Popen(f'{compiler} {input} -O3 {args} -o {output}', shell=True)
 
