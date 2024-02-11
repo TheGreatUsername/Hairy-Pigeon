@@ -1912,7 +1912,7 @@ def start(srcname, optimize=False, ismakeobject=False, isnoboundscheck=False):
     global cargs
     cargs = ''
     if not optimize : usecmalloc()
-    #usecmalloc()
+    # usecmalloc()
     src = open(srcname).read()
     tokens = ['use', '"hp"', ';'] + tokenize(src)
     douses()
