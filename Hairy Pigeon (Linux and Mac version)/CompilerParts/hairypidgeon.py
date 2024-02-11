@@ -827,7 +827,7 @@ def dostruct(base=None):
             else : match(',')
             skipnl()
     while toptok() != ']':
-        if toptok() == 'fn':
+        if toptok() == fnkey:
             global toki
             getok()
             if toptok().strip() == '[':
