@@ -255,11 +255,14 @@ fn tostr e = tostrextend "" e
 
 fn vremove v index = {
     checkoob v index
+    result = v[index]
     drop weakcast v.t memindex v.mem index 8
     for i index v.len - 1 : {
         memindexset v.mem i 8 memindex v.mem i+1 8
     }
     - v.len 1
+    | v.len < $ v.cap / 4 : v.cap = v.cap / 4
+    result
 }
 
 fn vfind v e = {
