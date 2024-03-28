@@ -54,7 +54,7 @@ comps.append(compile('gcc', 'file.c', 'file.o', args='-c'))
 comps.append(compile('gcc', 'onlyshowerr.c', 'onlyshowerr'))
 for c in comps : c.wait()
 
-for f in ['.bashrc', '.zshrc'] : subprocess.Popen(f'printf "\\nalias pigeon=\'python3 {compilerfolder}/main.py \'\\n" >> ~/{f}', shell=True).wait()
+for f in ['.bashrc', '.zshrc'] : subprocess.Popen(f'if ! grep -q "alias pigeon=" ~/{f}; then printf "\\nalias pigeon=\'python3 {compilerfolder}/main.py \'\\n" >> ~/{f}; fi', shell=True).wait()
 
 os.chdir(os.path.expanduser('~'))
 
