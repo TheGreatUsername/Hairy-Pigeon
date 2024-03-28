@@ -62,6 +62,7 @@ fn vec t = {
             result
         }
         fn * v n = {
+            n.(int)
             r = clone v
             for i 1 n : vextend r v
             | n == 0 : vclear r
@@ -480,27 +481,61 @@ fn cisdigit c = (c >= '0') or (c <= '9')
 
 fn strtoint ss = {
     s = vtrim ss
-    result = 0
-    p = -1
-    for (s.len) : {
-        c is vpop s
-        | cisdigit c : + result (toint c - '0') * pow 10 (+ p 1)
-        | _ : {
-            result = 0
-            break
+    | vhas s '.' : toint toflt s
+    | _ : {
+        result = 0
+        p = -1
+        for (s.len) : {
+            c is vpop s
+            | cisdigit c : + result (toint c - '0') * pow 10 (+ p 1)
+            | _ : {
+                result = 0
+                break
+            }
         }
+        result
     }
-    result
 }
 
-fn toint a = {
+fn toint a -> int = {
     | eqtype a flt : weakcast int cf (dubtolong a)
     | eqtype a str : strtoint a
     | _ : weakcast int a
 }
 
+fn strtoflt ss = {
+    orig = vtrim ss
+    sp = vsplit orig "."
+    s = sp[0]
+    d = sp[1]
+    iresult = 0
+    p = -1
+    for (s.len) : {
+        c = vpop s
+        | cisdigit c : + iresult (toint c - '0') * pow 10 (+ p 1)
+        | _ : {
+            iresult = 0
+            break
+        }
+    }
+    dresult = 0.0
+    dec = 0.1
+    d = vreverse d
+    for (d.len) : {
+        c = vpop d
+        | cisdigit c : + dresult (toint c - '0') * dec
+        | _ : {
+            dresult = 0.0
+            break
+        }
+        / dec 10
+    }
+    iresult + dresult
+}
+
 fn toflt a = { 
     | eqtype a flt : weakcast flt a
+    | eqtype a str : strtoflt a
     | _ : weakcast flt cf (longtodub a)
 }
 
@@ -567,7 +602,9 @@ fn vsplit s sp = {
 fn vmap l f = {
     result = vec l.t
     for e l : {
-        vpush result \> f e
+        ne is * f e
+        ne.(l.t)
+        vpush result ne
     }
     result
 }
@@ -699,6 +736,10 @@ fn lsh n s = n * pow 2 s
 
 fn epochms = toint cf (epochms)
 
+fn utcw = epochms / 1000 / 60 / 60 / 24 + 3 % 7
+fn utch = epochms / 1000 / 60 / 60 % 24
+fn utcm = epochms / 1000 / 60 % 60
+
 fn forkwith f = {
     id is toint cf (fork)
     | not id : { *f; exit 0 } 
@@ -721,6 +762,21 @@ fn randint = {
     | not sys_randseed : glo sys_randseed = epochms
     glo sys_randseed = abs sys_randseed * 17669 + 94201 / 10
 }
+
+fn readoutput cmd = {
+    result = ""
+    ccmd is vectocstr cmd
+    p is cf (popen ccmd `r`)
+    free ccmd
+    i = 0
+    for (not cf (feof p)) : {
+        + result ' '
+        memindexset result.mem ((result.len - 1) * 8) 1 (cf (fgetc p))
+    }
+    vpop result
+    result
+}
+
 
 #bullshit to prevent asm errors
 ["h" : "h"]

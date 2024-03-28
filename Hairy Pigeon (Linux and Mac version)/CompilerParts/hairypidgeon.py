@@ -481,7 +481,10 @@ def docall(name):
     pushout()
     types = []
     for i in range(argnum):
-        types.append(expr())
+        e = expr()
+        if e == voidid:
+            err("Cannot pass void as a function parameter")
+        types.append(e)
     outrp()
     args = popout()
     compilefunc(name, types)
@@ -546,6 +549,7 @@ def dounderscore():
 def doguard():
     global toki
     result = None
+    isunderscore = toptok() == '_'
     pushout()
     expr()
     cond = popout()
@@ -587,16 +591,17 @@ def doguard():
     match(':')
     t = expr()
     if result == None : result = t
-    elif result != t : result = types[voidkey]
+    elif result != t : result = voidid
     oldtoki = toki
     if toptok() == '\n' : getok()
     if toptok() == '|' :
         getok()
         t = doguard()
-        if result != t : result = types[voidkey]
+        if result != t : result = voidid
     else:
         toki = oldtoki
         out('0')
+        if not isunderscore : result = voidid
     outrp()
     return result
 
@@ -1023,6 +1028,8 @@ def doassign(v):
     if assignbycopy : drop(tmpvar, curvars[v])
     out(v)
     outrp()
+    if result == voidid:
+        err("Cannot assign to void type")
     return result
 
 def domemindex():
