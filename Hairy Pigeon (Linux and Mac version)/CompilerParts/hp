@@ -338,12 +338,12 @@ fn nosuchkey k -> (void) = {
     exit 1
 }
 
-fn map kt_ vt_ = [
+fn _map kt_ vt_ = [
     keys = vec kt_
     values = vec vt_
     strfmt = mapfmt
     fn [] m k = {
-        k.((mkeys m).t)
+        k.((m.keys).t)
         | not vhas mkeys m k : nosuchkey k
         resulti = 0
         for i m.keys.len : | m.keys[i] == k : resulti = i
@@ -353,6 +353,12 @@ fn map kt_ vt_ = [
         mset m i e
     }
 ]
+
+fn map k v = {
+    result is _map k v 
+    | false : result[k]
+    result
+}
  
 fn mset m k v = {
     k.(m.keys.t)
@@ -378,8 +384,8 @@ fn mget m k = {
     #result = vget m.values 0
     #for i m.keys.len : | (vget m.keys i) == k : result = vget m.values i
     #result
-    k.((mkeys m).t)
-    | not vhas mkeys m k : nosuchkey k
+    k.((m.keys).t)
+    | not m.keys m k : nosuchkey k
     result = m.values[0]
     for i m.keys.len : | m.keys[i] == k : result = m.values[i]
     result
@@ -470,8 +476,26 @@ fn writefile s text = {
     text
 }
 
+fn cisdigit c = (c >= '0') or (c <= '9')
+
+fn strtoint ss = {
+    s = vtrim ss
+    result = 0
+    p = -1
+    for (s.len) : {
+        c is vpop s
+        | cisdigit c : + result (toint c - '0') * pow 10 (+ p 1)
+        | _ : {
+            result = 0
+            break
+        }
+    }
+    result
+}
+
 fn toint a = {
     | eqtype a flt : weakcast int cf (dubtolong a)
+    | eqtype a str : strtoint a
     | _ : weakcast int a
 }
 
@@ -568,7 +592,7 @@ fn mkeys m = m.keys
 fn mvalues m = m.values
 
 fn mextend a b = {
-    keys = mkeys b
+    keys = b.keys
     for k keys : a[k] = b[k]
     a
 }
@@ -674,6 +698,12 @@ fn pow b p -> (int) = {
 fn lsh n s = n * pow 2 s
 
 fn epochms = toint cf (epochms)
+
+fn forkwith f = {
+    id is toint cf (fork)
+    | not id : { *f; exit 0 } 
+    id 
+}
 
 fn forkwithargs f a = {
     id is toint cf (fork)
